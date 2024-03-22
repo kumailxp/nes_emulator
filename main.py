@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 This is the main module of the NES emulator.
 
@@ -10,6 +12,9 @@ Example:
     >>> add(2, 3)
     5
 """
+
+
+from rich import print as rprint
 
 def add(a, b):
     """
@@ -26,4 +31,5 @@ def add(a, b):
 
 
 if __name__ == "__main__":
+    rprint("[bold red]hello")
     print(add(2, 3))
