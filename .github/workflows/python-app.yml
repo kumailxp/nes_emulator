@@ -40,4 +40,4 @@ jobs:
     - name: Code Coverage Summary
       uses: irongut/CodeCoverageSummary@v1.3.0
       with:
-         filename: .*test.*py, test_main.py
+         filename: '*.py'
