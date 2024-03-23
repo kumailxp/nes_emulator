@@ -24,18 +24,18 @@ class Olc6502:
     """
 
     mode_lookup = {
-        AddressingMode.IMP: lambda self: self.imp(),
-        AddressingMode.IMM: lambda self: self.imm(),
-        AddressingMode.ZP0: lambda self: self.zp0(),
-        AddressingMode.ZPX: lambda self: self.zpx(),
-        AddressingMode.ZPY: lambda self: self.zpy(),
-        AddressingMode.REL: lambda self: self.rel(),
-        AddressingMode.ABS: lambda self: self.abs(),
-        AddressingMode.ABX: lambda self: self.abx(),
-        AddressingMode.ABY: lambda self: self.aby(),
-        AddressingMode.IND: lambda self: self.ind(),
-        AddressingMode.IZX: lambda self: self.izx(),
-        AddressingMode.IZY: lambda self: self.izy(),
+        AddressingMode.IMP: lambda _: _.imp(),
+        AddressingMode.IMM: lambda _: _.imm(),
+        AddressingMode.ZP0: lambda _: _.zp0(),
+        AddressingMode.ZPX: lambda _: _.zpx(),
+        AddressingMode.ZPY: lambda _: _.zpy(),
+        AddressingMode.REL: lambda _: _.rel(),
+        AddressingMode.ABS: lambda _: _.abs(),
+        AddressingMode.ABX: lambda _: _.abx(),
+        AddressingMode.ABY: lambda _: _.aby(),
+        AddressingMode.IND: lambda _: _.ind(),
+        AddressingMode.IZX: lambda _: _.izx(),
+        AddressingMode.IZY: lambda _: _.izy(),
     }
 
     def __init__(self, bus: Bus):
