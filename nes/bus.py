@@ -70,7 +70,6 @@ class Bus:
         if 0x0000 <= addr <= 0xFFFF:
             log.info("read %s from %s", hex(self.ram[addr]), hex(addr))
             return uint8(self.ram[addr])
-        else:
-            log.error("Invalid address for read: %s", hex(addr))
 
+        log.error("Invalid address for read: %s", hex(addr))
         return uint8(0x00)

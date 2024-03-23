@@ -2,6 +2,9 @@
 This is the main file for the OLC6502 emulator.
 """
 # pylint: disable=too-many-public-methods
+# pylint: disable=too-many-lines
+# pylint: disable=unused-variable
+
 import logging
 from numpy import uint8, uint16
 from rich.logging import RichHandler

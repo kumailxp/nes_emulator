@@ -1,6 +1,7 @@
 """
 Copy-Left 2024 NES Emulator Project
 """
+# pylint: disable=too-few-public-methods
 import dataclasses
 from numpy import uint8
 from nes.address_mode import AddressingMode
