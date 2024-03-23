@@ -1,6 +1,10 @@
 """
 This is the main file for the OLC6502 emulator.
 """
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-lines
+# pylint: disable=unused-variable
+
 import logging
 from numpy import uint8, uint16
 from rich.logging import RichHandler
@@ -266,7 +270,7 @@ class Olc6502:
         self.register.pc += 1
         self.addr_abs = uint16((hi << 8) | lo)
         self.addr_abs += self.register.x
-        return True if (self.addr_abs & 0xFF00) != (hi << 8) else False
+        return (self.addr_abs & 0xFF00) != (uint16(hi) << 8)
 
     def aby(self) -> RequiresExtraCycle:
         """
@@ -281,7 +285,7 @@ class Olc6502:
         self.register.pc += 1
         self.addr_abs = uint16((hi << 8) | lo)
         self.addr_abs += self.register.y
-        return True if (self.addr_abs & 0xFF00) != (hi << 8) else False
+        return (self.addr_abs & 0xFF00) != (uint16(hi) << 8)
 
     def ind(self) -> RequiresExtraCycle:
         """
@@ -296,15 +300,13 @@ class Olc6502:
         self.register.pc += 1
         ptr = uint16((ptr_hi << 8) | ptr_lo)
 
+        # pylint: disable=unsupported-binary-operation
         if ptr_lo == 0x00FF:
-            self.addr_abs = uint16(self.read(ptr & uint16(0xFF00)) << 8) | uint16(
-                self.read(ptr)
-            )
+            self.addr_abs = uint16(self.read(ptr & uint16(0xFF00)) << 8) | uint16(self.read(ptr))
         else:
-            self.addr_abs = uint16(self.read(uint16(ptr + 1)) << 8) | uint16(
-                self.read(ptr)
-            )
+            self.addr_abs = uint16(self.read(uint16(ptr + 1)) << 8) | uint16(self.read(ptr))
         return False
+        # pylint: enable=unsupported-binary-operation
 
     def izx(self):
         """
@@ -331,7 +333,7 @@ class Olc6502:
         hi = self.read((t + 1) & 0x00FF)
         self.addr_abs = uint16((hi << 8) | lo)
         self.addr_abs += self.register.y
-        return True if (self.addr_abs & 0xFF00) != hi << 8 else False
+        return (self.addr_abs & 0xFF00) != (uint16(hi) << 8)
 
     # Instruction implementation for the OLC6502
     # pylint: disable=invalid-name
@@ -568,10 +570,11 @@ class Olc6502:
         self.write(self.register.stkp, self.register.status)
         self.register.stkp -= 1
         self.set_flag(Flags.B, uint8(0))
-
+        # pylint: disable=unsupported-binary-operation
         self.register.pc = uint16(
             uint16(self.read(uint16(0xFFFE))) | (uint16(self.read(uint16(0xFFFF))) << 8)
         )
+        # pylint: enable=unsupported-binary-operation
         return False
 
     def CLC(self) -> RequiresExtraCycle:
@@ -823,11 +826,7 @@ class Olc6502:
         Returns:
             bool: True if the instruction requires an extra cycle, False otherwise.
         """
-        match self.opcode:
-            case 0x1C, 0x3C, 0x5C, 0x7C, 0xDC, 0xFC:
-                return True
-            case _:
-                return False
+        return self.opcode in [0x1C, 0x3C, 0x5C, 0x7C, 0xDC, 0xFC]
 
     def ORA(self) -> RequiresExtraCycle:
         """
@@ -898,8 +897,8 @@ class Olc6502:
         one position to the left. The bit that was in bit 7 is shifted into
         the carry flag. Bit 0 is set to the value of the carry flag.
         """
-        fetched = self.fetch()
-        temp = uint16(fetched) << 1 | self.get_flag(Flags.C)
+        fetched = uint16(self.fetch())
+        temp = uint16(fetched << 1) | uint16(self.get_flag(Flags.C)) # pylint: disable=unsupported-binary-operation
         self.set_flag(Flags.C, uint8(temp & 0xFF00))
         self.set_flag(Flags.Z, (temp & 0x00FF) == 0x00)
         self.set_flag(Flags.N, uint8(temp & 0x0080))
@@ -920,7 +919,9 @@ class Olc6502:
         the carry flag. Bit 7 is set to the value of the carry flag.
         """
         fetched = self.fetch()
-        temp = (uint16(fetched) >> 1) | uint16(self.get_flag(Flags.C) << 7)
+        # pylint: disable=unsupported-binary-operation
+        temp = (uint16(fetched) >> 1) | uint16(uint16(self.get_flag(Flags.C)) << 7)
+        # pylint: enable=unsupported-binary-operation
         self.set_flag(Flags.C, uint8(fetched & 0x01))
         self.set_flag(Flags.Z, (temp & 0x00FF) == 0x00)
         self.set_flag(Flags.N, uint8(temp & 0x0080))
