@@ -4,8 +4,8 @@ Copy-Left 2024 NES Emulator Project
 
 import logging
 import numpy as np
+from numpy import uint8, uint16
 from rich.logging import RichHandler
-
 
 FORMAT = "%(message)s"
 logging.basicConfig(
@@ -40,9 +40,9 @@ class Bus:
         Returns:
             None
         """
-        self.ram = np.zeros(64 * 1024, dtype=int)
+        self.ram = np.zeros(64 * 1024, dtype=uint8)
 
-    def write(self, addr : int, data : int) -> None:
+    def write(self, addr : uint16, data : uint8) -> None:
         """
         Write data to the specified address.
 
@@ -57,7 +57,7 @@ class Bus:
             log.error("Invalid address for write: %s", hex(addr))
             raise IndexError(f"Invalid address for write: {addr}")
 
-    def read(self, addr : int) -> int:
+    def read(self, addr : uint16) -> uint8:
         """
         Read data from the specified address.
 
@@ -69,8 +69,8 @@ class Bus:
         """
         if addr >= 0x0000 and addr <= 0xFFFF:
             log.info("read %s from %s", hex(self.ram[addr]), hex(addr))
-            return int(self.ram[addr])
+            return uint8(self.ram[addr])
         else:
             log.error("Invalid address for read: %s", hex(addr))
 
-        return int(0x00)
+        return uint8(0x00)

@@ -1,8 +1,7 @@
 """
 This is the main file for the OLC6502 emulator.
 """
-
-import numpy as np
+from numpy import uint8, uint16
 from bus import Bus
 from isa import LookupTable
 from address_mode import AddressingMode
@@ -50,34 +49,31 @@ class Olc6502:
         Returns:
             None
         """
-        self.register = Register(a=0, x=0, y=0, stkp=0, pc=0, status=0)
+        self.register = Register(
+            a=uint8(0),
+            x=uint8(0),
+            y=uint8(0),
+            stkp=uint8(0),
+            pc=uint16(0),
+            status=uint8(0),
+        )
 
         self.bus = bus
 
         # Memory
-        self.memory = np.zeros(64 * 1024, dtype=int)
+        # self.memory = np.zeros(64 * 1024, dtype=uint8)
 
         # Absolute Address
-        self.addr_abs: int = 0
-        # Absolute Address
-        self.addr_abs: int = 0
+        self.addr_abs: uint16 = uint16(0)
 
         # Relative Address
-        self.addr_rel: int = 0
+        self.addr_rel: uint16 = uint16(0)
 
         # Current Opcode
-        self.opcode: int = 0
+        self.opcode: uint8 = uint8(0)
 
         # Current Cycles
-        self.cycles: int = 0
-        # Relative Address
-        self.addr_rel: int = 0
-
-        # Current Opcode
-        self.opcode: int = 0
-
-        # Current Cycles
-        self.cycles: int = 0
+        self.cycles: uint8 = uint8(0)
 
     def get_register(self):
         """
@@ -88,7 +84,7 @@ class Olc6502:
         """
         return self.register
 
-    def read(self, addr):
+    def read(self, addr : uint16) -> uint8:
         """
         Read data from the specified address.
 
@@ -100,7 +96,7 @@ class Olc6502:
         """
         return self.bus.read(addr)
 
-    def write(self, addr, data):
+    def write(self, addr: uint16, data: uint8) -> None:
         """
         Write data to the specified address.
 
@@ -186,9 +182,9 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address.
         """
-        self.addr_abs = self.read(self.get_register().pc)
+        self.addr_abs =  uint16(self.read(self.get_register().pc))
         self.get_register().pc += 1
-        self.addr_abs &= 0x00FF
+        self.addr_abs &= uint16(0x00FF)
         return False
 
     def zpx(self) -> RequiresExtraCycle:
@@ -197,9 +193,8 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address, then adds the X register to it.
         """
-        self.addr_abs = (
-            self.read(self.get_register().pc) + self.get_register().x
-        ) & 0x00FF
+        self.addr_abs = uint16(self.read(self.get_register().pc) +
+                                    self.get_register().x) & uint16(0x00FF)
         self.get_register().pc += 1
         return False
 
@@ -209,9 +204,9 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address, then adds the Y register to it.
         """
-        self.addr_abs = (
+        self.addr_abs = uint16(
             self.read(self.get_register().pc) + self.get_register().y
-        ) & 0x00FF
+        ) & uint16(0x00FF)
         self.get_register().pc += 1
         return False
 
@@ -224,10 +219,10 @@ class Olc6502:
         -128 to +127 of the branch instruction, i.e. you cant directly branch to any address in
         the addressable range.
         """
-        self.addr_rel = self.read(self.get_register().pc)
+        self.addr_rel = uint16(self.read(self.get_register().pc))
         self.get_register().pc += 1
         if self.addr_rel & 0x80:
-            self.addr_rel |= 0xFF00
+            self.addr_rel |= uint16(0xFF00)
         return False
 
     def abs(self) -> RequiresExtraCycle:
@@ -240,7 +235,7 @@ class Olc6502:
         self.get_register().pc += 1
         hi = self.read(self.get_register().pc)
         self.get_register().pc += 1
-        self.addr_abs = (hi << 8) | lo
+        self.addr_abs = uint16((hi << 8) | lo)
         return False
 
     def abx(self) -> RequiresExtraCycle:
@@ -253,7 +248,7 @@ class Olc6502:
         self.get_register().pc += 1
         hi = self.read(self.get_register().pc)
         self.get_register().pc += 1
-        self.addr_abs = (hi << 8) | lo
+        self.addr_abs = uint16((hi << 8) | lo)
         self.addr_abs += self.get_register().x
         return True if (self.addr_abs & 0xFF00) != (hi << 8) else False
 
@@ -268,7 +263,7 @@ class Olc6502:
         self.get_register().pc += 1
         hi = self.read(self.get_register().pc)
         self.get_register().pc += 1
-        self.addr_abs = (hi << 8) | lo
+        self.addr_abs = uint16((hi << 8) | lo)
         self.addr_abs += self.get_register().y
         return True if (self.addr_abs & 0xFF00) != (hi << 8) else False
 
@@ -283,12 +278,12 @@ class Olc6502:
         self.get_register().pc += 1
         ptr_hi = self.read(self.get_register().pc)
         self.get_register().pc += 1
-        ptr = (ptr_hi << 8) | ptr_lo
+        ptr = uint16((ptr_hi << 8) | ptr_lo)
 
         if ptr_lo == 0x00FF:
-            self.addr_abs = (self.read(ptr & 0xFF00) << 8) | self.read(ptr)
+            self.addr_abs = uint16(self.read(ptr & uint16(0xFF00)) << 8) | uint16(self.read(ptr))
         else:
-            self.addr_abs = (self.read(ptr + 1) << 8) | self.read(ptr)
+            self.addr_abs = uint16(self.read(uint16(ptr + 1)) << 8) | uint16(self.read(ptr))
         return False
 
     def izx(self):
@@ -299,9 +294,9 @@ class Olc6502:
         """
         t = self.read(self.get_register().pc)
         self.get_register().pc += 1
-        lo = self.read((t + self.get_register().x) & 0x00FF)
-        hi = self.read((t + self.get_register().x + 1) & 0x00FF)
-        self.addr_abs = (hi << 8) | lo
+        lo = self.read((t + self.get_register().x) & uint16(0x00FF))
+        hi = self.read((t + self.get_register().x + 1) & uint16(0x00FF))
+        self.addr_abs = uint16((hi << 8) | lo)
         return False
 
     def izy(self):
@@ -312,8 +307,8 @@ class Olc6502:
         """
         t = self.read(self.get_register().pc)
         self.get_register().pc += 1
-        lo = self.read(t)
+        lo = self.read(uint16(t))
         hi = self.read((t + 1) & 0x00FF)
-        self.addr_abs = (hi << 8) | lo
+        self.addr_abs = uint16((hi << 8) | lo)
         self.addr_abs += self.get_register().y
         return True if (self.addr_abs & 0xFF00) != hi << 8 else False

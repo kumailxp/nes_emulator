@@ -2,6 +2,7 @@
 This module contains the Register class, which represents the CPU registers in an NES emulator.
 """
 import dataclasses
+from numpy import uint8, uint16
 
 @dataclasses.dataclass
 class Register:
@@ -16,12 +17,12 @@ class Register:
         pc (int): The program counter register.
         status (int): The status register.
     """
-    a: int
-    x: int
-    y: int
-    stkp: int
-    pc: int
-    status: int
+    a: uint8
+    x: uint8
+    y: uint8
+    stkp: uint8
+    pc: uint16
+    status: uint8
 
     def __str__(self) -> str:
         return f"Register(a={self.a}, x={self.x}, y={self.y}, \
