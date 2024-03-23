@@ -1,5 +1,5 @@
 """
-Copy-Left 2021 NES Emulator Project
+Copy-Left 2024 NES Emulator Project
 """
 
 import logging
@@ -40,9 +40,9 @@ class Bus:
         Returns:
             None
         """
-        self.ram = np.zeros(64 * 1024, dtype=np.uint8)
+        self.ram = np.zeros(64 * 1024, dtype=int)
 
-    def write(self, addr, data) -> None:
+    def write(self, addr : int, data : int) -> None:
         """
         Write data to the specified address.
 
@@ -52,12 +52,12 @@ class Bus:
         """
         if addr >= 0x0000 and addr <= 0xFFFF:
             log.info("write %s to %s", hex(data), hex(addr))
-            self.ram[addr] = data
+            self.ram[addr] = int(data)
         else:
             log.error("Invalid address for write: %s", hex(addr))
             raise IndexError(f"Invalid address for write: {addr}")
 
-    def read(self, addr) -> np.uint8:
+    def read(self, addr : int) -> int:
         """
         Read data from the specified address.
 
@@ -69,8 +69,8 @@ class Bus:
         """
         if addr >= 0x0000 and addr <= 0xFFFF:
             log.info("read %s from %s", hex(self.ram[addr]), hex(addr))
-            return np.uint8(self.ram[addr])
+            return int(self.ram[addr])
         else:
             log.error("Invalid address for read: %s", hex(addr))
 
-        return np.uint8(0x00)
+        return int(0x00)
