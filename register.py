@@ -3,6 +3,7 @@ This module contains the Register class, which represents the CPU registers in a
 """
 import dataclasses
 from numpy import uint8, uint16
+from flags import Flags
 
 @dataclasses.dataclass
 class Register:
@@ -30,3 +31,27 @@ class Register:
 
     def __repr__(self) -> str:
         return str(self)
+
+    def get_flag(self, flag: Flags) -> uint8:
+        """
+        Get the value of a flag in the status register.
+
+        Args:
+            flag: The flag to get the value of.
+
+        Returns:
+            The value of the flag.
+        """
+        return self.status & uint8(flag.value)
+
+    def set_flag(self, value: uint8) -> None:
+        """
+        Set a flag in the status register.
+
+        Args:
+            value: The flag to set.
+        """
+        if value:
+            self.status |= value
+        else:
+            self.status &= ~value
