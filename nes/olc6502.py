@@ -266,7 +266,7 @@ class Olc6502:
         self.register.pc += 1
         self.addr_abs = uint16((hi << 8) | lo)
         self.addr_abs += self.register.x
-        return True if (self.addr_abs & 0xFF00) != (hi << 8) else False
+        return (self.addr_abs & 0xFF00) != (uint16(hi) << 8)
 
     def aby(self) -> RequiresExtraCycle:
         """
@@ -281,7 +281,7 @@ class Olc6502:
         self.register.pc += 1
         self.addr_abs = uint16((hi << 8) | lo)
         self.addr_abs += self.register.y
-        return True if (self.addr_abs & 0xFF00) != (hi << 8) else False
+        return (self.addr_abs & 0xFF00) != (uint16(hi) << 8)
 
     def ind(self) -> RequiresExtraCycle:
         """
@@ -331,7 +331,7 @@ class Olc6502:
         hi = self.read((t + 1) & 0x00FF)
         self.addr_abs = uint16((hi << 8) | lo)
         self.addr_abs += self.register.y
-        return True if (self.addr_abs & 0xFF00) != hi << 8 else False
+        return (self.addr_abs & 0xFF00) != (uint16(hi) << 8)
 
     # Instruction implementation for the OLC6502
     # pylint: disable=invalid-name
@@ -823,11 +823,10 @@ class Olc6502:
         Returns:
             bool: True if the instruction requires an extra cycle, False otherwise.
         """
-        match self.opcode:
-            case 0x1C, 0x3C, 0x5C, 0x7C, 0xDC, 0xFC:
-                return True
-            case _:
-                return False
+        if self.opcode in [0x1C, 0x3C, 0x5C, 0x7C, 0xDC, 0xFC]:
+            return True
+        else:
+            return False
 
     def ORA(self) -> RequiresExtraCycle:
         """
@@ -898,8 +897,8 @@ class Olc6502:
         one position to the left. The bit that was in bit 7 is shifted into
         the carry flag. Bit 0 is set to the value of the carry flag.
         """
-        fetched = self.fetch()
-        temp = uint16(fetched) << 1 | self.get_flag(Flags.C)
+        fetched = uint16(self.fetch())
+        temp = uint16(fetched << 1) | uint16(self.get_flag(Flags.C))
         self.set_flag(Flags.C, uint8(temp & 0xFF00))
         self.set_flag(Flags.Z, (temp & 0x00FF) == 0x00)
         self.set_flag(Flags.N, uint8(temp & 0x0080))
