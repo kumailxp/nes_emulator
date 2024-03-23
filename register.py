@@ -24,7 +24,8 @@ class Register:
     status: int
 
     def __str__(self) -> str:
-        return f"Register(a={self.a}, x={self.x}, y={self.y}, stkp={self.stkp}, pc={self.pc}, status={self.status})"
+        return f"Register(a={self.a}, x={self.x}, y={self.y}, \
+                stkp={self.stkp}, pc={self.pc}, status={self.status})"
 
     def __repr__(self) -> str:
-        return self.__str__()
+        return str(self)

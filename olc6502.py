@@ -1,40 +1,15 @@
 """
 This is the main file for the OLC6502 emulator.
 """
-import enum
+
 import numpy as np
 from bus import Bus
 from isa import LookupTable
 from address_mode import AddressingMode
 from register import Register
 
-class Flags(enum.Enum):
-    """
-    Represents the flags used in the status register of the 6502 processor.
-
-    The flags are used to indicate various conditions and control the behavior of the processor.
-
-    Attributes:
-        C: Carry Bit
-        Z: Zero
-        I: Disable Interrupts
-        D: Decimal Mode (unused in this implementation)
-        B: Break
-        U: Unused
-        V: Overflow
-        N: Negative
-    """
-
-    C = 1 << 0
-    Z = 1 << 1
-    I = 1 << 2
-    D = 1 << 3
-    B = 1 << 4
-    U = 1 << 5
-    V = 1 << 6
-    N = 1 << 7
-
 RequiresExtraCycle = bool
+
 
 class Olc6502:
     """
@@ -59,9 +34,8 @@ class Olc6502:
         AddressingMode.ABY: lambda self: self.aby(),
         AddressingMode.IND: lambda self: self.ind(),
         AddressingMode.IZX: lambda self: self.izx(),
-        AddressingMode.IZY: lambda self: self.izy()
+        AddressingMode.IZY: lambda self: self.izy(),
     }
-
 
     def __init__(self, bus: Bus):
         """
@@ -77,13 +51,7 @@ class Olc6502:
             None
         """
         self.register = Register(a=0, x=0, y=0, stkp=0, pc=0, status=0)
-        
-        # self.a = 0
-        # self.x = 0
-        # self.y = 0
-        # self.stkp = 0
-        # self.pc = 0
-        # self.status = 0
+
         self.bus = bus
 
         # Memory
@@ -180,9 +148,9 @@ class Olc6502:
             self.get_register().pc += 1
             instruction = LookupTable.lookup_table[self.opcode]
             self.cycles = instruction.cycles
-            
-            #require_extra_cycle_from_mode = Olc6502.mode_lookup[instruction.addr_mode](self)
-            #require_extra_cycle_from_instruction = instruction.execute()
+
+            # require_extra_cycle_from_mode = Olc6502.mode_lookup[instruction.addr_mode](self)
+            # require_extra_cycle_from_instruction = instruction.execute()
 
     def execute(self):
         """
@@ -229,7 +197,9 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address, then adds the X register to it.
         """
-        self.addr_abs = (self.read(self.get_register().pc) + self.get_register().x) & 0x00FF
+        self.addr_abs = (
+            self.read(self.get_register().pc) + self.get_register().x
+        ) & 0x00FF
         self.get_register().pc += 1
         return False
 
@@ -239,7 +209,9 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address, then adds the Y register to it.
         """
-        self.addr_abs = (self.read(self.get_register().pc) + self.get_register().y) & 0x00FF
+        self.addr_abs = (
+            self.read(self.get_register().pc) + self.get_register().y
+        ) & 0x00FF
         self.get_register().pc += 1
         return False
 
@@ -249,7 +221,7 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address, then adds it to the program counter.
         This address mode is exclusive to branch instructions. The address must reside within
-        -128 to +127 of the branch instruction, i.e. you cant directly branch to any address in 
+        -128 to +127 of the branch instruction, i.e. you cant directly branch to any address in
         the addressable range.
         """
         self.addr_rel = self.read(self.get_register().pc)
