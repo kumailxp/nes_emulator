@@ -50,7 +50,7 @@ class Bus:
             addr: The address to write to.
             data: The data to write.
         """
-        if addr >= 0x0000 and addr <= 0xFFFF:
+        if 0x0000 <= addr <= 0xFFFF:
             log.info("write %s to %s", hex(data), hex(addr))
             self.ram[addr] = int(data)
         else:
@@ -67,7 +67,7 @@ class Bus:
         Returns:
             The data read from the address.
         """
-        if addr >= 0x0000 and addr <= 0xFFFF:
+        if 0x0000 <= addr <= 0xFFFF:
             log.info("read %s from %s", hex(self.ram[addr]), hex(addr))
             return uint8(self.ram[addr])
         else:

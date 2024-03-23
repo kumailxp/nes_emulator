@@ -34,15 +34,15 @@ class Register:
 
     def get_flag(self, flag: Flags) -> uint8:
         """
-        Get the value of a flag in the status register.
+        Retrieves the value of the specified flag from the status register.
 
         Args:
-            flag: The flag to get the value of.
+            flag (Flags): The flag to retrieve the value of.
 
         Returns:
-            The value of the flag.
+            uint8: The value of the specified flag (1 if set, 0 if not set).
         """
-        return self.status & uint8(flag.value)
+        return uint8(1) if self.status & uint8(flag.value) > 0 else uint8(0)
 
     def set_flag(self, flag: Flags, value: uint8) -> None:
         """

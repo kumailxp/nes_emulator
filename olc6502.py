@@ -111,15 +111,15 @@ class Olc6502:
         log.info("write %s to %s", hex(data), hex(addr))
         self.bus.write(addr, data)
 
-    def get_flag(self, flag: Flags):
+    def get_flag(self, flag: Flags) -> uint8:
         """
         Retrieves the value of the specified flag from the register.
 
         Parameters:
-        - flag (Flags): The flag to retrieve.
+        - flag (Flags): The flag to retrieve the value of.
 
         Returns:
-        - int: The value of the specified flag.
+        - uint8: The value of the specified flag.
         """
         return self.register.get_flag(flag)
 

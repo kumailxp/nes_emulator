@@ -23,7 +23,7 @@ class TestBus(unittest.TestCase):
         """
         bus = Bus()
         with self.assertRaises(IndexError):
-            bus.write(0xFFFF, 0xCD) # type: ignore
+            bus.write(0xFFFF + 1, 0xCD) # type: ignore
 
     def test_write_data(self):
         """

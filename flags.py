@@ -2,7 +2,9 @@
 This module contains the Flags enum, which represents the flags
 used in the status register of the 6502 processor.
 """
+
 import enum
+
 
 class Flags(enum.Enum):
     """
