@@ -12,7 +12,7 @@ logging.basicConfig(
     level="DEBUG", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(level="DEBUG")]
 )
 
-log = logging.getLogger("rich")
+log = logging.getLogger("bus")
 log.setLevel(logging.DEBUG)
 
 

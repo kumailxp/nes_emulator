@@ -1,8 +1,9 @@
 """
 This is the main file for the OLC6502 emulator.
 """
-
+import logging
 from numpy import uint8, uint16
+from rich.logging import RichHandler
 from bus import Bus
 from isa import LookupTable
 from address_mode import AddressingMode
@@ -10,6 +11,14 @@ from register import Register
 from flags import Flags
 
 RequiresExtraCycle = bool
+
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="DEBUG", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(level="DEBUG")]
+)
+
+log = logging.getLogger("cpu")
+log.setLevel(logging.DEBUG)
 
 
 class Olc6502:
@@ -87,7 +96,9 @@ class Olc6502:
         Returns:
             The data read from the address.
         """
-        return self.bus.read(addr)
+        data : uint8 = self.bus.read(addr)
+        log.info("read %s from %s", hex(data), hex(addr))
+        return data
 
     def write(self, addr: uint16, data: uint8) -> None:
         """
@@ -97,6 +108,7 @@ class Olc6502:
             addr: The address to write to.
             data: The data to write.
         """
+        log.info("write %s to %s", hex(data), hex(addr))
         self.bus.write(addr, data)
 
     def get_flag(self, flag: Flags):
