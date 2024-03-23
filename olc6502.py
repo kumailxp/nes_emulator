@@ -5,6 +5,8 @@ import enum
 import numpy as np
 from bus import Bus
 from isa import LookupTable
+from address_mode import AddressingMode
+from register import Register
 
 class Flags(enum.Enum):
     """
@@ -41,15 +43,25 @@ class Olc6502:
     The 6502 processor is responsible for executing instructions and managing the state of the NES.
 
     Attributes:
-        a: Accumulator Register
-        x: X Register
-        y: Y Register
-        stkp: Stack Pointer
-        pc: Program Counter
-        status: Status Register
         bus: Bus object for accessing memory
         memory: Memory array for storing data
     """
+
+    mode_lookup = {
+        AddressingMode.IMP: lambda self: self.imp(),
+        AddressingMode.IMM: lambda self: self.imm(),
+        AddressingMode.ZP0: lambda self: self.zp0(),
+        AddressingMode.ZPX: lambda self: self.zpx(),
+        AddressingMode.ZPY: lambda self: self.zpy(),
+        AddressingMode.REL: lambda self: self.rel(),
+        AddressingMode.ABS: lambda self: self.abs(),
+        AddressingMode.ABX: lambda self: self.abx(),
+        AddressingMode.ABY: lambda self: self.aby(),
+        AddressingMode.IND: lambda self: self.ind(),
+        AddressingMode.IZX: lambda self: self.izx(),
+        AddressingMode.IZY: lambda self: self.izy()
+    }
+
 
     def __init__(self, bus: Bus):
         """
@@ -64,12 +76,14 @@ class Olc6502:
         Returns:
             None
         """
-        self.a = 0
-        self.x = 0
-        self.y = 0
-        self.stkp = 0
-        self.pc = 0
-        self.status = 0
+        self.register = Register(a=0, x=0, y=0, stkp=0, pc=0, status=0)
+        
+        # self.a = 0
+        # self.x = 0
+        # self.y = 0
+        # self.stkp = 0
+        # self.pc = 0
+        # self.status = 0
         self.bus = bus
 
         # Memory
@@ -96,6 +110,15 @@ class Olc6502:
 
         # Current Cycles
         self.cycles: int = 0
+
+    def get_register(self):
+        """
+        Get the register object.
+
+        Returns:
+            The register object.
+        """
+        return self.register
 
     def read(self, addr):
         """
@@ -129,7 +152,7 @@ class Olc6502:
         Returns:
             The value of the flag.
         """
-        return self.status & flag
+        return self.get_register().status & flag
 
     def set_flag(self, flag, value):
         """
@@ -140,9 +163,9 @@ class Olc6502:
             value: The value to set the flag to.
         """
         if value:
-            self.status |= flag
+            self.get_register().status |= flag
         else:
-            self.status &= ~flag
+            self.get_register().status &= ~flag
 
     def clock(self):
         """
@@ -153,9 +176,21 @@ class Olc6502:
 
         """
         if self.cycles == 0:
-            self.opcode = self.read(self.pc)
-            self.pc += 1
-            self.cycles = LookupTable.lookup_table[self.opcode].cycles
+            self.opcode = self.read(self.get_register().pc)
+            self.get_register().pc += 1
+            instruction = LookupTable.lookup_table[self.opcode]
+            self.cycles = instruction.cycles
+            
+            #require_extra_cycle_from_mode = Olc6502.mode_lookup[instruction.addr_mode](self)
+            #require_extra_cycle_from_instruction = instruction.execute()
+
+    def execute(self):
+        """
+        Executes the instruction associated with the current opcode.
+
+        This method is responsible for executing the instruction associated with the current opcode.
+        """
+        instruction = LookupTable.lookup_table[self.opcode]
 
     # Addressing Modes
     def imp(self) -> RequiresExtraCycle:
@@ -173,8 +208,8 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address.
         """
-        self.pc += 1
-        self.addr_abs = self.pc
+        self.get_register().pc += 1
+        self.addr_abs = self.get_register().pc
         return False
 
     def zp0(self) -> RequiresExtraCycle:
@@ -183,8 +218,8 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address.
         """
-        self.addr_abs = self.read(self.pc)
-        self.pc += 1
+        self.addr_abs = self.read(self.get_register().pc)
+        self.get_register().pc += 1
         self.addr_abs &= 0x00FF
         return False
 
@@ -194,8 +229,8 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address, then adds the X register to it.
         """
-        self.addr_abs = (self.read(self.pc) + self.x) & 0x00FF
-        self.pc += 1
+        self.addr_abs = (self.read(self.get_register().pc) + self.get_register().x) & 0x00FF
+        self.get_register().pc += 1
         return False
 
     def zpy(self) -> RequiresExtraCycle:
@@ -204,8 +239,8 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address, then adds the Y register to it.
         """
-        self.addr_abs = (self.read(self.pc) + self.y) & 0x00FF
-        self.pc += 1
+        self.addr_abs = (self.read(self.get_register().pc) + self.get_register().y) & 0x00FF
+        self.get_register().pc += 1
         return False
 
     def rel(self) -> RequiresExtraCycle:
@@ -217,8 +252,8 @@ class Olc6502:
         -128 to +127 of the branch instruction, i.e. you cant directly branch to any address in 
         the addressable range.
         """
-        self.addr_rel = self.read(self.pc)
-        self.pc += 1
+        self.addr_rel = self.read(self.get_register().pc)
+        self.get_register().pc += 1
         if self.addr_rel & 0x80:
             self.addr_rel |= 0xFF00
         return False
@@ -229,10 +264,10 @@ class Olc6502:
 
         This addressing mode uses the next two bytes as the address.
         """
-        lo = self.read(self.pc)
-        self.pc += 1
-        hi = self.read(self.pc)
-        self.pc += 1
+        lo = self.read(self.get_register().pc)
+        self.get_register().pc += 1
+        hi = self.read(self.get_register().pc)
+        self.get_register().pc += 1
         self.addr_abs = (hi << 8) | lo
         return False
 
@@ -242,12 +277,12 @@ class Olc6502:
 
         This addressing mode uses the next two bytes as the address, then adds the X register to it.
         """
-        lo = self.read(self.pc)
-        self.pc += 1
-        hi = self.read(self.pc)
-        self.pc += 1
+        lo = self.read(self.get_register().pc)
+        self.get_register().pc += 1
+        hi = self.read(self.get_register().pc)
+        self.get_register().pc += 1
         self.addr_abs = (hi << 8) | lo
-        self.addr_abs += self.x
+        self.addr_abs += self.get_register().x
         return True if (self.addr_abs & 0xFF00) != (hi << 8) else False
 
     def aby(self) -> RequiresExtraCycle:
@@ -257,12 +292,12 @@ class Olc6502:
         This addressing mode uses the next two bytes as the address,
         then adds the Y register to it.
         """
-        lo = self.read(self.pc)
-        self.pc += 1
-        hi = self.read(self.pc)
-        self.pc += 1
+        lo = self.read(self.get_register().pc)
+        self.get_register().pc += 1
+        hi = self.read(self.get_register().pc)
+        self.get_register().pc += 1
         self.addr_abs = (hi << 8) | lo
-        self.addr_abs += self.y
+        self.addr_abs += self.get_register().y
         return True if (self.addr_abs & 0xFF00) != (hi << 8) else False
 
     def ind(self) -> RequiresExtraCycle:
@@ -272,10 +307,10 @@ class Olc6502:
         This addressing mode uses the next two bytes as the address,
         then reads the address from that location.
         """
-        ptr_lo = self.read(self.pc)
-        self.pc += 1
-        ptr_hi = self.read(self.pc)
-        self.pc += 1
+        ptr_lo = self.read(self.get_register().pc)
+        self.get_register().pc += 1
+        ptr_hi = self.read(self.get_register().pc)
+        self.get_register().pc += 1
         ptr = (ptr_hi << 8) | ptr_lo
 
         if ptr_lo == 0x00FF:
@@ -290,10 +325,10 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address, then adds the X register to it.
         """
-        t = self.read(self.pc)
-        self.pc += 1
-        lo = self.read((t + self.x) & 0x00FF)
-        hi = self.read((t + self.x + 1) & 0x00FF)
+        t = self.read(self.get_register().pc)
+        self.get_register().pc += 1
+        lo = self.read((t + self.get_register().x) & 0x00FF)
+        hi = self.read((t + self.get_register().x + 1) & 0x00FF)
         self.addr_abs = (hi << 8) | lo
         return False
 
@@ -303,10 +338,10 @@ class Olc6502:
 
         This addressing mode uses the next byte as the address, then adds the Y register to it.
         """
-        t = self.read(self.pc)
-        self.pc += 1
+        t = self.read(self.get_register().pc)
+        self.get_register().pc += 1
         lo = self.read(t)
         hi = self.read((t + 1) & 0x00FF)
         self.addr_abs = (hi << 8) | lo
-        self.addr_abs += self.y
+        self.addr_abs += self.get_register().y
         return True if (self.addr_abs & 0xFF00) != hi << 8 else False
