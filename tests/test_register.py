@@ -4,8 +4,8 @@ Unit tests for the Register class.
 
 import pytest
 from numpy import uint8, uint16
-from register import Register
-from flags import Flags
+from nes.register import Register
+from nes.flags import Flags
 
 # pylint: disable=redefined-outer-name
 

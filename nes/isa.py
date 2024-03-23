@@ -3,7 +3,7 @@ Copy-Left 2024 NES Emulator Project
 """
 import dataclasses
 from numpy import uint8
-from address_mode import AddressingMode
+from nes.address_mode import AddressingMode
 
 @dataclasses.dataclass
 class Instruction:

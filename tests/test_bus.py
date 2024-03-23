@@ -2,7 +2,7 @@
 Tests for the Bus class.
 """
 import unittest
-from bus import Bus
+from nes.bus import Bus
 
 class TestBus(unittest.TestCase):
     """

@@ -4,11 +4,11 @@ This is the main file for the OLC6502 emulator.
 import logging
 from numpy import uint8, uint16
 from rich.logging import RichHandler
-from bus import Bus
-from isa import LookupTable
-from address_mode import AddressingMode
-from register import Register
-from flags import Flags
+from nes.bus import Bus
+from nes.isa import LookupTable
+from nes.address_mode import AddressingMode
+from nes.register import Register
+from nes.flags import Flags
 
 RequiresExtraCycle = bool
 

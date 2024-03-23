@@ -3,7 +3,7 @@ This module contains the Register class, which represents the CPU registers in a
 """
 import dataclasses
 from numpy import uint8, uint16
-from flags import Flags
+from nes.flags import Flags
 
 @dataclasses.dataclass
 class Register:

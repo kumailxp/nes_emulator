@@ -3,8 +3,8 @@ Test the Olc6502 class.
 """
 
 import pytest
-from olc6502 import Olc6502
-from bus import Bus
+from nes.olc6502 import Olc6502
+from nes.bus import Bus
 
 @pytest.fixture
 def cpu():
