@@ -921,7 +921,6 @@ class Olc6502:
 
         return False
 
-    ### TODO: Start fixing from here
     def RTI(self) -> RequiresExtraCycle:
         """
         Return from Interrupt.
@@ -929,14 +928,14 @@ class Olc6502:
         This instruction pulls the processor status from the stack and
         sets the program counter to the address on the stack.
         """
-        self.register.sp += 1
-        self.register.status = self.read(self.register.sp)
-        self.set_flag(Flags.B, 0)
-        self.set_flag(Flags.U, 0)
-        self.register.sp += 1
-        self.register.pc = uint16(self.read(self.register.sp)) | (
-            uint16(self.read(self.register.sp + 1)) << 8
-        )
+        self.register.stkp += 1
+        self.register.status = self.read(0x0100 + self.register.stkp)
+        self.set_flag(Flags.B, uint8(0))
+        self.set_flag(Flags.U, uint8(0))
+        self.register.stkp += 1
+        self.register.pc = uint16(self.read(0x0100 + self.register.stkp))
+        self.register.stkp += 1
+        self.register.pc = uint16(uint16(self.read(0x0100 + self.register.stkp)) << 8)
         return False
 
     def RTS(self) -> RequiresExtraCycle:
@@ -946,11 +945,10 @@ class Olc6502:
         This instruction pulls the program counter from the stack and
         adds one to it.
         """
-        self.register.sp += 1
-        self.register.pc = uint16(self.read(self.register.sp)) | (
-            uint16(self.read(self.register.sp + 1)) << 8
-        )
-        self.register.pc += 1
+        self.register.stkp += 1
+        self.register.pc = uint16(self.read(0x0100 + self.register.stkp))
+        self.register.stkp += 1
+        self.register.pc = uint16(uint16(self.read(0x0100 + self.register.stkp)) << 8)
         return False
 
     def SEC(self) -> RequiresExtraCycle:
@@ -959,7 +957,7 @@ class Olc6502:
 
         This instruction sets the carry flag.
         """
-        self.set_flag(Flags.C, 1)
+        self.set_flag(Flags.C, uint8(1))
         return False
 
     def SED(self) -> RequiresExtraCycle:
@@ -968,7 +966,7 @@ class Olc6502:
 
         This instruction sets the decimal mode flag.
         """
-        self.set_flag(Flags.D, 1)
+        self.set_flag(Flags.D, uint8(1))
         return False
 
     def SEI(self) -> RequiresExtraCycle:
@@ -977,7 +975,7 @@ class Olc6502:
 
         This instruction sets the interrupt disable flag.
         """
-        self.set_flag(Flags.I, 1)
+        self.set_flag(Flags.I, uint8(1))
         return False
 
     def STA(self) -> RequiresExtraCycle:
@@ -1015,7 +1013,7 @@ class Olc6502:
         """
         self.register.x = self.register.a
         self.set_flag(Flags.Z, self.register.x == 0x00)
-        self.set_flag(Flags.N, self.register.x & 0x80)
+        self.set_flag(Flags.N, self.register.x & uint8(0x80))
         return False
 
     def TAY(self) -> RequiresExtraCycle:
@@ -1026,7 +1024,7 @@ class Olc6502:
         """
         self.register.y = self.register.a
         self.set_flag(Flags.Z, self.register.y == 0x00)
-        self.set_flag(Flags.N, self.register.y & 0x80)
+        self.set_flag(Flags.N, self.register.y & uint8(0x80))
         return False
 
     def TSX(self) -> RequiresExtraCycle:
@@ -1035,9 +1033,9 @@ class Olc6502:
 
         This instruction transfers the value of the stack pointer to the X register.
         """
-        self.register.x = self.register.sp
+        self.register.x = self.register.stkp
         self.set_flag(Flags.Z, self.register.x == 0x00)
-        self.set_flag(Flags.N, self.register.x & 0x80)
+        self.set_flag(Flags.N, self.register.x & uint8(0x80))
         return False
 
     def TXA(self) -> RequiresExtraCycle:
@@ -1048,7 +1046,7 @@ class Olc6502:
         """
         self.register.a = self.register.x
         self.set_flag(Flags.Z, self.register.a == 0x00)
-        self.set_flag(Flags.N, self.register.a & 0x80)
+        self.set_flag(Flags.N, self.register.a & uint8(0x80))
         return False
 
     def TXS(self) -> RequiresExtraCycle:
@@ -1057,7 +1055,7 @@ class Olc6502:
 
         This instruction transfers the value of the X register to the stack pointer.
         """
-        self.register.sp = self.register.x
+        self.register.stkp = self.register.x
         return False
 
     def TYA(self) -> RequiresExtraCycle:
@@ -1068,5 +1066,5 @@ class Olc6502:
         """
         self.register.a = self.register.y
         self.set_flag(Flags.Z, self.register.a == 0x00)
-        self.set_flag(Flags.N, self.register.a & 0x80)
+        self.set_flag(Flags.N, self.register.a & uint8(0x80))
         return False
