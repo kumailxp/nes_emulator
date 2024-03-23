@@ -44,7 +44,7 @@ class Register:
         """
         return self.status & uint8(flag.value)
 
-    def set_flag(self, value: uint8) -> None:
+    def set_flag(self, flag: Flags, value: uint8) -> None:
         """
         Set a flag in the status register.
 
@@ -52,6 +52,6 @@ class Register:
             value: The flag to set.
         """
         if value:
-            self.status |= value
+            self.status |= uint8(flag.value)
         else:
-            self.status &= ~value
+            self.status &= uint8(~flag.value)
