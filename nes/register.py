@@ -55,4 +55,4 @@ class Register:
         if value:
             self.status |= uint8(flag.value)
         else:
-            self.status &= uint8(~flag.value)
+            self.status &= ~flag.value # pylint: disable=*
