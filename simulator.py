@@ -4,9 +4,8 @@ An implementation of a NES simulator using Pygame.
 """
 
 from typing import Dict, List
-import sys
 import pygame
-
+from prettyprinter import pprint
 
 class HexdumpViewer:
     """
@@ -20,44 +19,24 @@ class HexdumpViewer:
         self.screen = screen
         self.font_size = 14
         self.line_spacing = 28
-        self.hex_dump : Dict[int, List[int]] = {
-            0x0000 : [0x73, 0x72, 0x64, 0x3d, 0x34, 0x34, 0x34, 0x62, 0x3d, 0x34, 0x34, 0x34, 0x64, 0x33, 0x3d, 0x33],
-            0x0010 : [0x64, 0x6b, 0x3d, 0x34, 0x34, 0x34, 0x64, 0x25, 0x56, 0x3d, 0x44, 0x34, 0xe4, 0x64, 0x3f, 0xc2],
-            0x0020 : [0x6b, 0x3d, 0x2e, 0x2e, 0x0a, 0x69, 0x6c, 0x86, 0x3d, 0x34, 0x34, 0x34, 0x74, 0x74, 0x73, 0x65],
-            0x0030 : [0x2e, 0x2e, 0x0a, 0x78, 0x65, 0x74, 0x6f, 0x67, 0x3d, 0x2e, 0x2e, 0x0a, 0x79, 0x6d, 0x6e, 0x73],
-            0x0040 : [0x6f, 0x70, 0x3d, 0x2e, 0x2e, 0x0a, 0x6e, 0x63, 0x6f, 0x6c, 0x6f, 0x72, 0x3d, 0x32, 0x35, 0x36],
-            0x0050 : [0x6e, 0x69, 0x3d, 0x34, 0x34, 0x34, 0x64, 0x6f, 0x3d, 0x34, 0x34, 0x34, 0x64, 0x6f, 0x3d, 0x34],
-            0x0060 : [0x74, 0x3d, 0x2e, 0x33, 0x34, 0x6d, 0x72, 0x54, 0x3d, 0x34, 0x31, 0x2e, 0x30, 0x2e, 0x62, 0x0a],
-            0x0070 : [0x74, 0x2d, 0x74, 0x70, 0x3d, 0x33, 0x30, 0x30, 0x2f, 0x73, 0x3d, 0x33, 0x30, 0x30, 0x2f, 0x73],
-            0x0080 : [0x6d, 0x63, 0x62, 0x3d, 0x30, 0x3a, 0x34, 0x6d, 0x6b, 0x74, 0x3d, 0x2e, 0x2e, 0x0a, 0x6c, 0x6f],
-            0x0090 : [0x75, 0x6c, 0x3d, 0x2e, 0x2e, 0x0a, 0x74, 0x79, 0x6d, 0x6e, 0x73, 0x3d, 0x2e, 0x2e, 0x0a, 0x4d],
-            0x00a0 : [0x64, 0x74, 0x6e, 0x69, 0x6f, 0x3d, 0x34, 0x30, 0x2e, 0x0a, 0x4d, 0x64, 0x74, 0x6e, 0x69, 0x6f],
-            0x00b0 : [0x34, 0x74, 0x63, 0x64, 0x69, 0x64, 0x3d, 0x34, 0x30, 0x2e, 0x0a, 0x4d, 0x64, 0x74, 0x6e, 0x69],
-            0x00c0 : [0x34, 0x74, 0x74, 0x73, 0x65, 0x3d, 0x34, 0x31, 0x2e, 0x0a, 0x4d, 0x64, 0x74, 0x6e, 0x69, 0x34],
-            0x00d0 : [0x2e, 0x0a, 0x6c, 0x74, 0x6f, 0x6d, 0x69, 0x73, 0x3d, 0x34, 0x34, 0x34, 0x74, 0x6b, 0x74, 0x3d],
-            0x00e0 : [0x3d, 0x2e, 0x2e, 0x0a, 0x6c, 0x67, 0x79, 0x3d, 0x34, 0x34, 0x34, 0x74, 0x6b, 0x74, 0x3d, 0x3d],
-            0x00f0 : [0x2e, 0x2e, 0x0a, 0x79, 0x6d, 0x6e, 0x73, 0x3d, 0x2e, 0x2e, 0x0a, 0x6f, 0x6d, 0x3d, 0x34, 0x34],
-            0x0100 : [0x2e, 0x37, 0x34, 0x74, 0x6c, 0x6e, 0x3d, 0x33, 0x34, 0x74, 0x6e, 0x5f, 0x78, 0x65, 0x74, 0x6f],
-            0x0110 : [0x34, 0x34, 0x74, 0x74, 0x73, 0x3d, 0x34, 0x31, 0x2e, 0x0a, 0x6f, 0x6d, 0x3d, 0x34, 0x34, 0x34],
-            0x0120 : [0x34, 0x74, 0x63, 0x3d, 0x34, 0x2e, 0x2e, 0x0a, 0x6f, 0x6d, 0x3d, 0x34, 0x34, 0x34, 0x74, 0x6d],
-            0x0130 : [0x6f, 0x6d, 0x3d, 0x34, 0x34, 0x34, 0x74, 0x6d, 0x6f, 0x6d, 0x3d, 0x34, 0x34, 0x34, 0x74, 0x6d],
-            0x0140 : [0x6b, 0x74, 0xdd, 0x2e, 0x32, 0x34, 0x74, 0x70, 0x3d, 0x33, 0x30, 0x30, 0x2f, 0x73, 0x3d, 0x33],
-            0x0150 : [0x6e, 0x5f, 0x78, 0x65, 0x74, 0x6f, 0x74, 0x3d, 0x2e, 0x33, 0x34, 0x6d, 0x72, 0x54, 0x3d, 0x34],
-            0x0160 : [0x2e, 0x0a, 0x6c, 0x74, 0x6f, 0x6d, 0x69, 0x73, 0x3d, 0x34, 0x34, 0x34, 0x74, 0x6b, 0x74, 0x3d]
-        }
+        self.hex_dump : Dict[int, List[int]] = {}
+        for i in range(0x0000, 0x00180, 0x0010):
+            self.hex_dump[i] = [0] * 16
+
         self.text_objects = []
         self.hexdump_str_y_position = []
-        
+
     def create(self) -> None:
         """
         Draws the hex dump.
         """
+        self.text_objects.clear()
         font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
         for key, value in self.hex_dump.items():
-            vals = " ".join([f"{val:02x}" for val in value])
-            text = font.render(f"0x{key:04x}: {vals}", True, (238, 58, 140))
+            vals = " ".join([f"{val:02X}" for val in value])
+            text = font.render(f"0x{key:04X}: {vals}", True, (238, 58, 140))
             self.text_objects.append(text)
-            
+
     def blit(self) -> None:
         """
         Blits the hex dump to the screen.
@@ -66,25 +45,107 @@ class HexdumpViewer:
         for i, text in enumerate(self.text_objects):
             if i % 8 == 0 and i != 0:
                 # Add extra spacing for every 8 lines
-                add_extra = (i/8)*16
+                add_extra = (i / 8) * 16
             if i == 0:
                 self.screen.blit(text, [10, 13])
-                self.hexdump_str_y_position.append(13+1)
+                self.hexdump_str_y_position.append(13 + 1)
             else:
-                next_line_pos = self.line_spacing + ((i-1)* 16) + add_extra
-                self.hexdump_str_y_position.append(next_line_pos +1)
+                next_line_pos = self.line_spacing + ((i - 1) * 16) + add_extra
+                self.hexdump_str_y_position.append(next_line_pos + 1)
                 self.screen.blit(text, [10, next_line_pos])
 
+    def draw_rect_alpha(self):
+        """
+        Draws two semi-transparent rectangles on the screen.
 
-    # def update(self):
-    #     pygame.draw.rect(self.screen, (255,0,0), pygame.Rect(30, 30, 60, 60))
-        
-    def draw_rect_alpha(self, ):
-        rect = pygame.Rect(30, self.hexdump_str_y_position[1], 40, 14)
+        The rectangles are positioned at specific coordinates and have a size of 20x14 pixels.
+        The color of the rectangles is red with an alpha value of 150 (semi-transparent).
+
+        """
+        rect = pygame.Rect(72 + (24 * 4), self.hexdump_str_y_position[1], 20, 14)
         shape_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(shape_surf, (255,0,0, 150), shape_surf.get_rect())
+        pygame.draw.rect(shape_surf, (255, 0, 0, 150), shape_surf.get_rect())
         self.screen.blit(shape_surf, rect)
-    
+        rect = pygame.Rect(72 + (24 * 4), self.hexdump_str_y_position[5], 20, 14)
+        shape_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(shape_surf, (255, 0, 0, 150), shape_surf.get_rect())
+        self.screen.blit(shape_surf, rect)
+
+    def load(self, ram_offset_, asm_string_):
+        """
+        Load the given assembly code into the emulator's memory.
+
+        Args:
+            ram_offset_ (int): The offset in the emulator's memory where
+            the assembly code should be loaded.
+            asm_string_ (str): The assembly code to be loaded.
+
+        """
+        asm_list = HexdumpViewer.split_asm_hex_in_16(asm_string_)
+        print(type(asm_list[0][0]))
+
+        for i, byte_chunk in enumerate(asm_list):
+            self.hex_dump[ram_offset_ + (i * 16)] = byte_chunk
+        self.create()
+        pprint(self.hex_dump[ram_offset_])
+
+    @classmethod
+    def clean_up_string(cls, asm_string_: str) -> List[str]:
+        """
+        Cleans up the assembly string.
+
+        Args:
+            asm_string (str): The assembly string.
+
+        Returns:
+            List[str]: The cleaned up assembly string.
+        """
+        asm_string_ = asm_string_.replace("\n", " ")
+        asm_list = asm_string_.split(" ")
+        asm_list_clean = [val for val in asm_list if val != ""]
+        return asm_list_clean
+
+    @classmethod
+    def split_asm_string_in_16(cls, asm_string_: str) -> List[List[str]]:
+        """
+        Splits an assembly string into a list of lists, each containing 16 elements.
+
+        Args:
+            asm_string (str): The assembly string to be split.
+
+        Returns:
+            List[List[str]]: A list of lists, where each inner list
+            contains 16 elements from the original string.
+        """
+        asm_list = HexdumpViewer.clean_up_string(asm_string_)
+        asm_list_split = [asm_list[i : i + 16] for i in range(0, len(asm_list), 16)]
+        return asm_list_split
+
+    @classmethod
+    def split_asm_hex_in_16(cls, asm_string_: str) -> List[List[int]]:
+        """
+        Splits the given assembly string into a list of lists,
+        where each inner list contains 16 hexadecimal values.
+
+        Args:
+            asm_string (str): The assembly string to be split.
+
+        Returns:
+            List[List[int]]: A list of lists, where each inner list
+            contains 16 hexadecimal values.
+
+        """
+        asm_list = HexdumpViewer.clean_up_string(asm_string_)
+        asm_list_in_hex = [(int(val, 16)) for val in asm_list]
+        asm_list_in_hex_split = [
+            asm_list_in_hex[i : i + 16] for i in range(0, len(asm_list_in_hex), 16)
+        ]
+        print(len(asm_list_in_hex_split[-1]))
+        missing = 16 - len(asm_list_in_hex_split[-1])
+        if missing:
+            asm_list_in_hex_split[-1] += [0] * missing
+        return asm_list_in_hex_split
+
 
 class NesSimulator:
     """
@@ -118,9 +179,17 @@ class NesSimulator:
         # self.sample_text = "0000000 7361 7274 696f 3d64 333d 312e 302e 620a"
         # self.text0 = font.render(self.sample_text, True, (238, 58, 140))
         # self.text1 = font.render(self.sample_text, True, (238, 58, 140))
-        
+
         self.hex_dumper = HexdumpViewer(self.screen)
         self.hex_dumper.create()
+        ram_offset = 0x0080
+        asm_string = """
+        A2 0A 8E 00 00 A2 03 8E
+        01 00 AC 00 00 A9 00 18
+        6D 01 00 88 D0 FA 8D 02
+        00 EA EA EA
+        """
+        self.hex_dumper.load(ram_offset, asm_string)
 
         self.fps = 30
         self.refresh = pygame.USEREVENT + 1
@@ -145,16 +214,21 @@ class NesSimulator:
                     print("test_val: ", self.test_val)
                     # font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
                     # self.text0 = font.render("sdfsdsd sf sdf sd fs df sdf ", True, (238, 58, 140))
-                    #self.text1 = font.render(self.sample_text, True, (238, 58, 140))
+                    # self.text1 = font.render(self.sample_text, True, (238, 58, 140))
                 elif event.key == pygame.K_MINUS or event.key == pygame.K_KP_MINUS:
                     self.test_val -= 1
                     print("test_val: ", self.test_val)
-                    #font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
-                    #self.text0 = font.render(self.sample_text, True, (238, 58, 140))
-                    #self.text1 = font.render(self.sample_text, True, (238, 58, 140))
+                    # font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
+                    # self.text0 = font.render(self.sample_text, True, (238, 58, 140))
+                    # self.text1 = font.render(self.sample_text, True, (238, 58, 140))
                 elif event.key == pygame.K_r:
                     print("r presed")
-                    self.hex_dumper.update()
+                    # self.hex_dumper.update()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                print("Mouse button pressed")
+                print(
+                    "Position:", event.pos
+                )  # event.pos is a tuple (x, y) representing the
             else:
                 pass
 
@@ -165,13 +239,13 @@ class NesSimulator:
 
         self.screen.fill(self.bg_color)
         # pygame.draw.rect(self.screen, (255,0,0), pygame.Rect(30, 30, 60, 60))
-        #self.screen.blit(self.text0, [10, 10])
+        # self.screen.blit(self.text0, [10, 10])
         self.hex_dumper.blit()
         self.hex_dumper.draw_rect_alpha()
-        #self.screen.blit(self.text1, [10, self.line_spacing])
+        # self.screen.blit(self.text1, [10, self.line_spacing])
         pygame.display.flip()
 
 
-NesSimulator().run()
-pygame.quit()
-sys.exit()
+if __name__ == "__main__":
+    NesSimulator().run()
+    pygame.quit()
