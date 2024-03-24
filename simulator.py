@@ -5,7 +5,7 @@ An implementation of a NES simulator using Pygame.
 
 from typing import Dict, List
 import pygame
-from prettyprinter import pprint
+from nes.bus import Bus
 
 class HexdumpViewer:
     """
@@ -15,7 +15,10 @@ class HexdumpViewer:
         hex_dump (dict): A dictionary containing the hex dump data.
     """
 
-    def __init__(self, screen: pygame.Surface) -> None:
+    def __init__(self, screen: pygame.Surface|None) -> None:
+        if screen is None:
+            pass
+
         self.screen = screen
         self.font_size = 14
         self.line_spacing = 28
@@ -23,7 +26,7 @@ class HexdumpViewer:
         for i in range(0x0000, 0x00180, 0x0010):
             self.hex_dump[i] = [0] * 16
 
-        self.text_objects = []
+        self.text_objects : Dict[int, pygame.Surface] = {}
         self.hexdump_str_y_position = []
 
     def create(self) -> None:
@@ -33,16 +36,17 @@ class HexdumpViewer:
         self.text_objects.clear()
         font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
         for key, value in self.hex_dump.items():
+            print(key, value)
             vals = " ".join([f"{val:02X}" for val in value])
             text = font.render(f"0x{key:04X}: {vals}", True, (238, 58, 140))
-            self.text_objects.append(text)
+            self.text_objects[key] = text
 
     def blit(self) -> None:
         """
         Blits the hex dump to the screen.
         """
         add_extra = 0
-        for i, text in enumerate(self.text_objects):
+        for i, (_, text) in enumerate(self.text_objects.items()):
             if i % 8 == 0 and i != 0:
                 # Add extra spacing for every 8 lines
                 add_extra = (i / 8) * 16
@@ -71,6 +75,38 @@ class HexdumpViewer:
         pygame.draw.rect(shape_surf, (255, 0, 0, 150), shape_surf.get_rect())
         self.screen.blit(shape_surf, rect)
 
+    def check_128_byte_chunk(self, chunk) -> bool:
+        """
+        Checks if the current chunk of data is 128 bytes.
+
+        Returns:
+            bool: True if the current chunk of data is 128 bytes, False otherwise.
+        """
+        assert len(chunk) == 128
+        return all(chunk == 0 for chunk in chunk)
+        
+
+    def load_from_file(self, ram_offset_: int, file_path_: str) -> None:
+        """
+        Loads the hex dump from a file.
+
+        Args:
+            ram_offset_ (int): The offset in the emulator's memory where the hex dump should be loaded.
+            file_path_ (str): The path to the file containing the hex dump.
+
+        """
+        nes = Bus()
+        nes.load_to_ram(ram_offset_, file_path_)
+        ram = nes.ram
+        for offset in range(0, len(ram), 128):
+            chunk = ram[offset : offset + 128]
+            if not self.check_128_byte_chunk(chunk):
+                sixteen_byte_chunks = HexdumpViewer.split_into_16_bytes(chunk)
+                for byte_chunk in sixteen_byte_chunks:
+                    self.hex_dump[offset] = byte_chunk
+                    offset += 16
+        self.create()
+        
     def load(self, ram_offset_, asm_string_):
         """
         Load the given assembly code into the emulator's memory.
@@ -82,12 +118,9 @@ class HexdumpViewer:
 
         """
         asm_list = HexdumpViewer.split_asm_hex_in_16(asm_string_)
-        print(type(asm_list[0][0]))
-
         for i, byte_chunk in enumerate(asm_list):
             self.hex_dump[ram_offset_ + (i * 16)] = byte_chunk
         self.create()
-        pprint(self.hex_dump[ram_offset_])
 
     @classmethod
     def clean_up_string(cls, asm_string_: str) -> List[str]:
@@ -140,11 +173,32 @@ class HexdumpViewer:
         asm_list_in_hex_split = [
             asm_list_in_hex[i : i + 16] for i in range(0, len(asm_list_in_hex), 16)
         ]
-        print(len(asm_list_in_hex_split[-1]))
         missing = 16 - len(asm_list_in_hex_split[-1])
         if missing:
             asm_list_in_hex_split[-1] += [0] * missing
         return asm_list_in_hex_split
+
+    @classmethod
+    def split_into_16_bytes(cls, hex_array):
+        """
+        Splits the given list of hexadecimal values into a list of lists,
+        where each inner list contains 16 hexadecimal values.
+
+        Args:
+            hex_array (List[int]): The list of hexadecimal values to be split.
+
+        Returns:
+            List[List[int]]: A list of lists, where each inner list contains 16 hexadecimal values.
+
+        """
+        temp = [hex_array[i : i + 16] for i in range(0, len(hex_array), 16)]
+        hex_array_split = []
+        for bytes_chunk in temp:
+            t = []
+            for byte in bytes_chunk:
+                t.append(int(byte))
+            hex_array_split.append(t)
+        return hex_array_split
 
 
 class NesSimulator:
@@ -165,7 +219,6 @@ class NesSimulator:
         """
         Initializes the NES simulator.
         """
-
         pygame.init()
         self.width = 800
         self.height = 600
@@ -181,15 +234,15 @@ class NesSimulator:
         # self.text1 = font.render(self.sample_text, True, (238, 58, 140))
 
         self.hex_dumper = HexdumpViewer(self.screen)
-        self.hex_dumper.create()
+        # self.hex_dumper.create()
         ram_offset = 0x0080
-        asm_string = """
-        A2 0A 8E 00 00 A2 03 8E
-        01 00 AC 00 00 A9 00 18
-        6D 01 00 88 D0 FA 8D 02
-        00 EA EA EA
-        """
-        self.hex_dumper.load(ram_offset, asm_string)
+        # asm_string = """
+        # A2 0A 8E 00 00 A2 03 8E
+        # 01 00 AC 00 00 A9 00 18
+        # 6D 01 00 88 D0 FA 8D 02
+        # 00 EA EA EA
+        # """
+        self.hex_dumper.load_from_file(ram_offset, "6502-mult.bin")
 
         self.fps = 30
         self.refresh = pygame.USEREVENT + 1
@@ -247,5 +300,7 @@ class NesSimulator:
 
 
 if __name__ == "__main__":
+    #x = HexdumpViewer(None)
+    #x.load_from_file(0x0080, "6502-mult.bin")
     NesSimulator().run()
     pygame.quit()
