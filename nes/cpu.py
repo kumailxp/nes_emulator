@@ -42,19 +42,19 @@ class Cpu:
     # pylint: disable=unused-argument
     # pylint: disable=missing-function-docstring
     def read(self, addr: uint16) -> uint8:
-        return uint8(0)
+        raise NotImplementedError("method must be implemented by the subclass.")
 
     def write(self, addr: uint16, data: uint8) -> None:
-        pass
+        raise NotImplementedError("method must be implemented by the subclass.")
 
     def set_flag(self, flag: Flags, value: bool) -> None:
-        pass
+        raise NotImplementedError("method must be implemented by the subclass.")
 
     def get_flag(self, flag: Flags) -> uint8:
-        return uint8(0)
+        raise NotImplementedError("method must be implemented by the subclass.")
 
     def clock(self) -> None:
-        pass
+        raise NotImplementedError("method must be implemented by the subclass.")
 
     def fetch(self) -> uint8:
-        return uint8(0)
+        raise NotImplementedError("method must be implemented by the subclass.")
