@@ -281,7 +281,7 @@ class InstructionSelector:
         # pylint: disable=unsupported-binary-operation
         self.cpu.register.pc = uint16(
             uint16(self.cpu.read(uint16(0xFFFE)))
-            | (uint16(self.cpu.read(uint16(0xFFFF))) << 8)
+            | (uint16(uint16(self.cpu.read(uint16(0xFFFF)))) << 8)
         )
         # pylint: enable=unsupported-binary-operation
         return False
@@ -632,7 +632,7 @@ class InstructionSelector:
         """
         fetched = self.cpu.fetch()
         # pylint: disable=unsupported-binary-operation
-        temp = (uint16(fetched) >> 1) | uint16(uint16(self.cpu.get_flag(Flags.C)) << 7)
+        temp = uint16((uint16(fetched) >> 1)) | uint16(uint16(self.cpu.get_flag(Flags.C)) << 7)
         # pylint: enable=unsupported-binary-operation
         self.cpu.set_flag(Flags.C, bool(fetched & 0x01))
         self.cpu.set_flag(Flags.Z, (temp & 0x00FF) == 0x00)
@@ -644,25 +644,6 @@ class InstructionSelector:
         else:
             self.cpu.write(self.cpu.addr_abs, uint8(temp & 0x00FF))
 
-        return False
-
-    def RTI(self) -> RequiresExtraCycle:
-        """
-        Return from Interrupt.
-
-        This instruction pulls the processor status from the stack and
-        sets the program counter to the address on the stack.
-        """
-        self.cpu.register.stkp += 1
-        self.cpu.register.status = self.cpu.read(0x0100 + self.cpu.register.stkp)
-        self.cpu.set_flag(Flags.B, False)
-        self.cpu.set_flag(Flags.U, False)
-        self.cpu.register.stkp += 1
-        self.cpu.register.pc = uint16(self.cpu.read(0x0100 + self.cpu.register.stkp))
-        self.cpu.register.stkp += 1
-        self.cpu.register.pc = uint16(
-            uint16(self.cpu.read(0x0100 + self.cpu.register.stkp)) << 8
-        )
         return False
 
     def RTS(self) -> RequiresExtraCycle:
@@ -796,4 +777,24 @@ class InstructionSelector:
         self.cpu.register.a = self.cpu.register.y
         self.cpu.set_flag(Flags.Z, self.cpu.register.a == 0x00)
         self.cpu.set_flag(Flags.N, bool(self.cpu.register.a & uint8(0x80)))
+        return False
+
+    def RTI(self) -> RequiresExtraCycle:
+        """
+        Return from interrupt.
+
+        This method is called when the processor returns from an interrupt,
+        setting the program counter to the address stored on the stack.
+        """
+        self.cpu.register.stkp += 1
+        self.cpu.register.status = self.cpu.read(0x0100 + self.cpu.register.stkp)
+        self.cpu.register.status &= uint8(~Flags.B.value)
+        self.cpu.register.status &= uint8(~Flags.U.value)
+
+        self.cpu.register.stkp += 1
+        self.cpu.register.pc = uint16(self.cpu.read(0x0100 + self.cpu.register.stkp))
+        self.cpu.register.stkp += 1
+        hi = self.cpu.read(0x0100 + self.cpu.register.stkp)
+        self.cpu.register.pc |= uint16(uint16(hi) << 8)
+
         return False
