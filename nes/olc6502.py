@@ -118,7 +118,7 @@ class Olc6502:
         """
         return self.register.get_flag(flag)
 
-    def set_flag(self, flag: Flags, value: uint8):
+    def set_flag(self, flag: Flags, value: bool):
         """
         Sets the flag value of the register.
 
@@ -136,7 +136,7 @@ class Olc6502:
 
         """
         if self.cycles == 0:
-            self.set_flag(Flags.U, uint8(1))
+            self.set_flag(Flags.U, True)
             self.opcode = self.read(self.register.pc)
             self.register.pc += 1
             instruction = InstructionLookupTable.table[self.opcode]
@@ -149,7 +149,7 @@ class Olc6502:
 
             if require_extra_cycle_from_mode and require_extra_cycle_from_instruction:
                 self.cycles += 1
-            self.set_flag(Flags.U, uint8(1))
+            self.set_flag(Flags.U, True)
 
         self.cycles -= 1
 

@@ -56,18 +56,18 @@ class InstructionSelector:
         )
 
         # Set the carry flag if overflow occurs
-        self.cpu.set_flag(Flags.C, uint8(temp > uint16(0x00FF)))
+        self.cpu.set_flag(Flags.C, bool(temp > uint16(0x00FF)))
 
         # Set the zero flag if the result is zero
-        self.cpu.set_flag(Flags.Z, uint8((temp & uint16(0x00FF)) == 0))
+        self.cpu.set_flag(Flags.Z, bool((temp & uint16(0x00FF)) == 0))
 
         # Set the negative flag if the result is negative
-        self.cpu.set_flag(Flags.N, uint8(temp & uint16(0x0080)))
+        self.cpu.set_flag(Flags.N, bool(temp & uint16(0x0080)))
 
         # Calculate the overflow flag
         a = uint16(self.cpu.register.a)
         self.cpu.set_flag(
-            Flags.V, uint8(uint16(~(a ^ fetched) & (a ^ temp)) & uint16(0x0080))
+            Flags.V, bool(uint16(~(a ^ fetched) & (a ^ temp)) & uint16(0x0080))
         )
 
         # Store the result in the accumulator
@@ -91,18 +91,18 @@ class InstructionSelector:
         temp = uint16(self.cpu.register.a) + value + uint16(self.cpu.get_flag(Flags.C))
 
         # Set the carry flag if overflow occurs
-        self.cpu.set_flag(Flags.C, uint8(temp & uint16(0xFF00)))
+        self.cpu.set_flag(Flags.C, bool(temp & uint16(0xFF00)))
 
         # Set the zero flag if the result is zero
-        self.cpu.set_flag(Flags.Z, uint8((temp & uint16(0x00FF)) == 0))
+        self.cpu.set_flag(Flags.Z, bool((temp & uint16(0x00FF)) == 0))
 
         # Set the negative flag if the result is negative
-        self.cpu.set_flag(Flags.N, uint8(temp & uint16(0x0080)))
+        self.cpu.set_flag(Flags.N, bool(temp & uint16(0x0080)))
 
         # Calculate the overflow flag
         a = uint16(self.cpu.register.a)
         self.cpu.set_flag(
-            Flags.V, uint8(uint16((a ^ value) & (a ^ temp)) & uint16(0x0080))
+            Flags.V, bool(uint16((a ^ value) & (a ^ temp)) & uint16(0x0080))
         )
 
         # Store the result in the accumulator
@@ -120,7 +120,7 @@ class InstructionSelector:
         fetched = self.cpu.fetch()
         self.cpu.register.a &= fetched
         self.cpu.set_flag(Flags.Z, self.cpu.register.a == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.a & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.a & uint8(0x80)))
         return True
 
     def ASL(self) -> RequiresExtraCycle:
@@ -133,9 +133,9 @@ class InstructionSelector:
         """
         fetched = self.cpu.fetch()
         temp = uint16(uint16(fetched) << 1)
-        self.cpu.set_flag(Flags.C, uint8(temp & 0xFF00))
+        self.cpu.set_flag(Flags.C, bool(temp & 0xFF00))
         self.cpu.set_flag(Flags.Z, (temp & 0x00FF) == 0x00)
-        self.cpu.set_flag(Flags.N, uint8(temp & 0x80))
+        self.cpu.set_flag(Flags.N, bool(temp & 0x80))
 
         instruction = InstructionLookupTable.table[self.cpu.opcode]
         addr_mode = instruction.addr_mode
@@ -202,11 +202,11 @@ class InstructionSelector:
 
         This instruction is used to test bits in memory with the accumulator.
         """
-        fetched = uint16(self.cpu.fetch())
+        fetched = self.cpu.fetch()
         temp = self.cpu.register.a & fetched
         self.cpu.set_flag(Flags.Z, temp == 0x00)
-        self.cpu.set_flag(Flags.N, uint8(fetched & (1 << 7)))
-        self.cpu.set_flag(Flags.V, uint8(fetched & (1 << 6)))
+        self.cpu.set_flag(Flags.N, bool(fetched & (1 << 7)))
+        self.cpu.set_flag(Flags.V, bool(fetched & (1 << 6)))
         return False
 
     def BMI(self) -> RequiresExtraCycle:
@@ -267,17 +267,17 @@ class InstructionSelector:
         This instruction forces the generation of an interrupt request.
         """
         self.cpu.register.pc += 1
-        self.cpu.set_flag(Flags.I, uint8(1))
+        self.cpu.set_flag(Flags.I, True)
         self.cpu.write(
             self.cpu.register.stkp + 0x0100, (self.cpu.register.pc >> 8) & 0x00FF
         )
         self.cpu.register.stkp -= 1
         self.cpu.write(self.cpu.register.stkp + 0x0100, self.cpu.register.pc & 0x00FF)
         self.cpu.register.stkp -= 1
-        self.cpu.set_flag(Flags.B, uint8(1))
+        self.cpu.set_flag(Flags.B, True)
         self.cpu.write(self.cpu.register.stkp, self.cpu.register.status)
         self.cpu.register.stkp -= 1
-        self.cpu.set_flag(Flags.B, uint8(0))
+        self.cpu.set_flag(Flags.B, False)
         # pylint: disable=unsupported-binary-operation
         self.cpu.register.pc = uint16(
             uint16(self.cpu.read(uint16(0xFFFE)))
@@ -292,7 +292,7 @@ class InstructionSelector:
 
         This instruction clears the carry flag.
         """
-        self.cpu.set_flag(Flags.C, uint8(0))
+        self.cpu.set_flag(Flags.C, False)
         return False
 
     def CLD(self) -> RequiresExtraCycle:
@@ -301,7 +301,7 @@ class InstructionSelector:
 
         This instruction clears the decimal mode flag.
         """
-        self.cpu.set_flag(Flags.D, uint8(0))
+        self.cpu.set_flag(Flags.D, False)
         return False
 
     def CLI(self) -> RequiresExtraCycle:
@@ -310,7 +310,7 @@ class InstructionSelector:
 
         This instruction clears the interrupt disable flag.
         """
-        self.cpu.set_flag(Flags.I, uint8(0))
+        self.cpu.set_flag(Flags.I, False)
         return False
 
     def CLV(self) -> RequiresExtraCycle:
@@ -319,7 +319,7 @@ class InstructionSelector:
 
         This instruction clears the overflow flag.
         """
-        self.cpu.set_flag(Flags.V, uint8(0))
+        self.cpu.set_flag(Flags.V, False)
         return False
 
     def CMP(self) -> RequiresExtraCycle:
@@ -330,9 +330,9 @@ class InstructionSelector:
         """
         fetched = self.cpu.fetch()
         temp = uint16(self.cpu.register.a) - uint16(fetched)
-        self.cpu.set_flag(Flags.C, uint8(self.cpu.register.a >= fetched))
-        self.cpu.set_flag(Flags.Z, uint8((temp & 0x00FF) == 0x0000))
-        self.cpu.set_flag(Flags.N, uint8(temp & 0x0080))
+        self.cpu.set_flag(Flags.C, bool(self.cpu.register.a >= fetched))
+        self.cpu.set_flag(Flags.Z, bool((temp & 0x00FF) == 0x0000))
+        self.cpu.set_flag(Flags.N, bool(temp & 0x0080))
         return True
 
     def CPX(self) -> RequiresExtraCycle:
@@ -343,9 +343,9 @@ class InstructionSelector:
         """
         fetched = self.cpu.fetch()
         temp = uint16(self.cpu.register.x) - uint16(fetched)
-        self.cpu.set_flag(Flags.C, uint8(self.cpu.register.x >= fetched))
-        self.cpu.set_flag(Flags.Z, uint8((temp & 0x00FF) == 0x0000))
-        self.cpu.set_flag(Flags.N, uint8(temp & 0x0080))
+        self.cpu.set_flag(Flags.C, bool(self.cpu.register.x >= fetched))
+        self.cpu.set_flag(Flags.Z, bool((temp & 0x00FF) == 0x0000))
+        self.cpu.set_flag(Flags.N, bool(temp & 0x0080))
         return False
 
     def CPY(self) -> RequiresExtraCycle:
@@ -356,9 +356,9 @@ class InstructionSelector:
         """
         fetched = self.cpu.fetch()
         temp = uint16(self.cpu.register.y) - uint16(fetched)
-        self.cpu.set_flag(Flags.C, uint8(self.cpu.register.y >= fetched))
-        self.cpu.set_flag(Flags.Z, uint8((temp & 0x00FF) == 0x0000))
-        self.cpu.set_flag(Flags.N, uint8(temp & 0x0080))
+        self.cpu.set_flag(Flags.C, bool(self.cpu.register.y >= fetched))
+        self.cpu.set_flag(Flags.Z, bool((temp & 0x00FF) == 0x0000))
+        self.cpu.set_flag(Flags.N, bool(temp & 0x0080))
         return False
 
     def DEC(self) -> RequiresExtraCycle:
@@ -370,8 +370,8 @@ class InstructionSelector:
         fetched = self.cpu.fetch()
         temp = uint16(fetched) - 1
         self.cpu.write(self.cpu.addr_abs, temp & 0x00FF)
-        self.cpu.set_flag(Flags.Z, uint8((temp & 0x00FF) == 0x0000))
-        self.cpu.set_flag(Flags.N, uint8(temp & 0x0080))
+        self.cpu.set_flag(Flags.Z, bool((temp & 0x00FF) == 0x0000))
+        self.cpu.set_flag(Flags.N, bool(temp & 0x0080))
         return False
 
     def DEX(self) -> RequiresExtraCycle:
@@ -381,8 +381,8 @@ class InstructionSelector:
         This instruction decrements the value of the X register.
         """
         self.cpu.register.x -= 1
-        self.cpu.set_flag(Flags.Z, uint8(self.cpu.register.x == 0x00))
-        self.cpu.set_flag(Flags.N, uint8(self.cpu.register.x & 0x80))
+        self.cpu.set_flag(Flags.Z, bool(self.cpu.register.x == 0x00))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.x & 0x80))
         return False
 
     def DEY(self) -> RequiresExtraCycle:
@@ -392,8 +392,8 @@ class InstructionSelector:
         This instruction decrements the value of the Y register.
         """
         self.cpu.register.y -= 1
-        self.cpu.set_flag(Flags.Z, uint8(self.cpu.register.y == 0x00))
-        self.cpu.set_flag(Flags.N, uint8(self.cpu.register.y & 0x80))
+        self.cpu.set_flag(Flags.Z, bool(self.cpu.register.y == 0x00))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.y & 0x80))
         return False
 
     def EOR(self) -> RequiresExtraCycle:
@@ -406,7 +406,7 @@ class InstructionSelector:
         fetched = self.cpu.fetch()
         self.cpu.register.a ^= fetched
         self.cpu.set_flag(Flags.Z, self.cpu.register.a == 0x00)
-        self.cpu.set_flag(Flags.N, uint8(self.cpu.register.a & 0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.a & 0x80))
         return True
 
     def INC(self) -> RequiresExtraCycle:
@@ -418,8 +418,8 @@ class InstructionSelector:
         fetched = self.cpu.fetch()
         temp = uint16(fetched) + 1
         self.cpu.write(self.cpu.addr_abs, temp & 0x00FF)
-        self.cpu.set_flag(Flags.Z, uint8((temp & 0x00FF) == 0x0000))
-        self.cpu.set_flag(Flags.N, uint8(temp & 0x0080))
+        self.cpu.set_flag(Flags.Z, bool((temp & 0x00FF) == 0x0000))
+        self.cpu.set_flag(Flags.N, bool(temp & 0x0080))
         return False
 
     def INX(self) -> RequiresExtraCycle:
@@ -429,7 +429,7 @@ class InstructionSelector:
         This instruction increments the value of the X register.
         """
         self.cpu.register.x += 1
-        self.cpu.set_flag(Flags.Z, uint8(self.cpu.register.x == 0x00))
+        self.cpu.set_flag(Flags.Z, bool(self.cpu.register.x == 0x00))
         self.cpu.set_flag(Flags.N, self.cpu.register.x & uint8(0x80))
         return False
 
@@ -440,7 +440,7 @@ class InstructionSelector:
         This instruction increments the value of the Y register.
         """
         self.cpu.register.y += 1
-        self.cpu.set_flag(Flags.Z, uint8(self.cpu.register.y == 0x00))
+        self.cpu.set_flag(Flags.Z, bool(self.cpu.register.y == 0x00))
         self.cpu.set_flag(Flags.N, self.cpu.register.y & uint8(0x80))
         return False
 
@@ -479,7 +479,7 @@ class InstructionSelector:
         fetched = self.cpu.fetch()
         self.cpu.register.a = fetched
         self.cpu.set_flag(Flags.Z, self.cpu.register.a == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.a & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.a & uint8(0x80)))
         return True
 
     def LDX(self) -> RequiresExtraCycle:
@@ -491,7 +491,7 @@ class InstructionSelector:
         fetched = self.cpu.fetch()
         self.cpu.register.x = fetched
         self.cpu.set_flag(Flags.Z, self.cpu.register.x == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.x & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.x & uint8(0x80)))
         return True
 
     def LDY(self) -> RequiresExtraCycle:
@@ -503,7 +503,7 @@ class InstructionSelector:
         fetched = self.cpu.fetch()
         self.cpu.register.y = fetched
         self.cpu.set_flag(Flags.Z, self.cpu.register.y == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.y & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.y & uint8(0x80)))
         return True
 
     def LSR(self) -> RequiresExtraCycle:
@@ -515,10 +515,10 @@ class InstructionSelector:
         the carry flag. Bit 7 is set to 0.
         """
         fetched = uint16(self.cpu.fetch())
-        self.cpu.set_flag(Flags.C, uint8(fetched & 0x0001))
+        self.cpu.set_flag(Flags.C, bool(fetched & 0x0001))
         temp = uint16(fetched) >> 1
         self.cpu.set_flag(Flags.Z, (temp & 0x00FF) == 0x0000)
-        self.cpu.set_flag(Flags.N, uint8(temp & 0x0080))
+        self.cpu.set_flag(Flags.N, bool(temp & 0x0080))
         instruction = InstructionLookupTable.table[self.cpu.opcode]
         addr_mode = instruction.addr_mode
         if addr_mode == AddressingMode.IMP:
@@ -549,7 +549,7 @@ class InstructionSelector:
         fetched = self.cpu.fetch()
         self.cpu.register.a |= fetched
         self.cpu.set_flag(Flags.Z, self.cpu.register.a == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.a & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.a & uint8(0x80)))
         return True
 
     def PHA(self) -> RequiresExtraCycle:
@@ -572,8 +572,8 @@ class InstructionSelector:
             0x0100 + self.cpu.register.stkp,
             uint8(self.cpu.register.status | Flags.B.value | Flags.U.value),
         )
-        self.cpu.set_flag(Flags.B, uint8(0))
-        self.cpu.set_flag(Flags.U, uint8(0))
+        self.cpu.set_flag(Flags.B, False)
+        self.cpu.set_flag(Flags.U, False)
         self.cpu.register.stkp -= 1
         return False
 
@@ -586,7 +586,7 @@ class InstructionSelector:
         self.cpu.register.stkp += 1
         self.cpu.register.a = self.cpu.read(0x0100 + self.cpu.register.stkp)
         self.cpu.set_flag(Flags.Z, self.cpu.register.a == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.a & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.a & uint8(0x80)))
         return False
 
     def PLP(self) -> RequiresExtraCycle:
@@ -597,7 +597,7 @@ class InstructionSelector:
         """
         self.cpu.register.stkp += 1
         self.cpu.register.status = self.cpu.read(0x0100 + self.cpu.register.stkp)
-        self.cpu.set_flag(Flags.U, uint8(1))
+        self.cpu.set_flag(Flags.U, True)
         return False
 
     def ROL(self) -> RequiresExtraCycle:
@@ -609,12 +609,11 @@ class InstructionSelector:
         the carry flag. Bit 0 is set to the value of the carry flag.
         """
         fetched = uint16(self.cpu.fetch())
-        temp = uint16(fetched << 1) | uint16(
-            self.cpu.get_flag(Flags.C)
-        )  # pylint: disable=unsupported-binary-operation
-        self.cpu.set_flag(Flags.C, uint8(temp & 0xFF00))
+        temp = uint16(fetched << 1) | uint16(self.cpu.get_flag(Flags.C))
+        # pylint: disable=unsupported-binary-operation
+        self.cpu.set_flag(Flags.C, bool(temp & 0xFF00))
         self.cpu.set_flag(Flags.Z, (temp & 0x00FF) == 0x00)
-        self.cpu.set_flag(Flags.N, uint8(temp & 0x0080))
+        self.cpu.set_flag(Flags.N, bool(temp & 0x0080))
         instruction = InstructionLookupTable.table[self.cpu.opcode]
         addr_mode = instruction.addr_mode
         if addr_mode == AddressingMode.IMP:
@@ -635,9 +634,9 @@ class InstructionSelector:
         # pylint: disable=unsupported-binary-operation
         temp = (uint16(fetched) >> 1) | uint16(uint16(self.cpu.get_flag(Flags.C)) << 7)
         # pylint: enable=unsupported-binary-operation
-        self.cpu.set_flag(Flags.C, uint8(fetched & 0x01))
+        self.cpu.set_flag(Flags.C, bool(fetched & 0x01))
         self.cpu.set_flag(Flags.Z, (temp & 0x00FF) == 0x00)
-        self.cpu.set_flag(Flags.N, uint8(temp & 0x0080))
+        self.cpu.set_flag(Flags.N, bool(temp & 0x0080))
         instruction = InstructionLookupTable.table[self.cpu.opcode]
         addr_mode = instruction.addr_mode
         if addr_mode == AddressingMode.IMP:
@@ -656,8 +655,8 @@ class InstructionSelector:
         """
         self.cpu.register.stkp += 1
         self.cpu.register.status = self.cpu.read(0x0100 + self.cpu.register.stkp)
-        self.cpu.set_flag(Flags.B, uint8(0))
-        self.cpu.set_flag(Flags.U, uint8(0))
+        self.cpu.set_flag(Flags.B, False)
+        self.cpu.set_flag(Flags.U, False)
         self.cpu.register.stkp += 1
         self.cpu.register.pc = uint16(self.cpu.read(0x0100 + self.cpu.register.stkp))
         self.cpu.register.stkp += 1
@@ -687,7 +686,7 @@ class InstructionSelector:
 
         This instruction sets the carry flag.
         """
-        self.cpu.set_flag(Flags.C, uint8(1))
+        self.cpu.set_flag(Flags.C, True)
         return False
 
     def SED(self) -> RequiresExtraCycle:
@@ -696,7 +695,7 @@ class InstructionSelector:
 
         This instruction sets the decimal mode flag.
         """
-        self.cpu.set_flag(Flags.D, uint8(1))
+        self.cpu.set_flag(Flags.D, True)
         return False
 
     def SEI(self) -> RequiresExtraCycle:
@@ -705,7 +704,7 @@ class InstructionSelector:
 
         This instruction sets the interrupt disable flag.
         """
-        self.cpu.set_flag(Flags.I, uint8(1))
+        self.cpu.set_flag(Flags.I, True)
         return False
 
     def STA(self) -> RequiresExtraCycle:
@@ -743,7 +742,7 @@ class InstructionSelector:
         """
         self.cpu.register.x = self.cpu.register.a
         self.cpu.set_flag(Flags.Z, self.cpu.register.x == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.x & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.x & uint8(0x80)))
         return False
 
     def TAY(self) -> RequiresExtraCycle:
@@ -754,7 +753,7 @@ class InstructionSelector:
         """
         self.cpu.register.y = self.cpu.register.a
         self.cpu.set_flag(Flags.Z, self.cpu.register.y == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.y & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.y & uint8(0x80)))
         return False
 
     def TSX(self) -> RequiresExtraCycle:
@@ -765,7 +764,7 @@ class InstructionSelector:
         """
         self.cpu.register.x = self.cpu.register.stkp
         self.cpu.set_flag(Flags.Z, self.cpu.register.x == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.x & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.x & uint8(0x80)))
         return False
 
     def TXA(self) -> RequiresExtraCycle:
@@ -776,7 +775,7 @@ class InstructionSelector:
         """
         self.cpu.register.a = self.cpu.register.x
         self.cpu.set_flag(Flags.Z, self.cpu.register.a == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.a & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.a & uint8(0x80)))
         return False
 
     def TXS(self) -> RequiresExtraCycle:
@@ -796,5 +795,5 @@ class InstructionSelector:
         """
         self.cpu.register.a = self.cpu.register.y
         self.cpu.set_flag(Flags.Z, self.cpu.register.a == 0x00)
-        self.cpu.set_flag(Flags.N, self.cpu.register.a & uint8(0x80))
+        self.cpu.set_flag(Flags.N, bool(self.cpu.register.a & uint8(0x80)))
         return False
