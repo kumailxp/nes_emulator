@@ -20,4 +20,4 @@ jobs:
         pip install pylint numpy rich pytest 
     - name: Analysing the code with pylint
       run: |
-        pylint $(git ls-files '*.py')
+        pylint --generated-members "pygame.*" $(git ls-files '*.py')
