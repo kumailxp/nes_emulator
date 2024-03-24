@@ -3,7 +3,8 @@ Implementation of the instruction selector.
 """
 
 from numpy import uint8, uint16
-from nes.olc6502 import Olc6502
+#from nes.olc6502 import Olc6502
+from nes.cpu import Cpu
 from nes.flags import Flags
 from nes.isa import InstructionLookupTable
 from nes.address_mode import AddressingMode
@@ -18,7 +19,7 @@ class InstructionSelector:
     different instructions for the NES CPU (Olc6502).
     """
 
-    def __init__(self, cpu: Olc6502):
+    def __init__(self, cpu: Cpu):
         self.cpu = cpu
 
     def select(self, opcode: Opcodes) -> RequiresExtraCycle:

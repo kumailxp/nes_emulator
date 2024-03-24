@@ -9,10 +9,10 @@ This is the main file for the OLC6502 emulator.
 import logging
 from numpy import uint8, uint16
 from rich.logging import RichHandler
+from nes.cpu import Cpu
 from nes.bus import Bus
 from nes.isa import InstructionLookupTable
 from nes.address_mode import AddressingMode
-from nes.register import Register
 from nes.flags import Flags
 from nes.address_mode_selector import AddressModeSelector
 from nes.instruction_selector import InstructionSelector
@@ -26,7 +26,7 @@ log = logging.getLogger("cpu")
 log.setLevel(logging.DEBUG)
 
 
-class Olc6502:
+class Olc6502(Cpu):
     """
     Represents the 6502 processor in the NES emulator.
 
@@ -50,34 +50,9 @@ class Olc6502:
         Returns:
             None
         """
-        self.register = Register(
-            a=uint8(0),
-            x=uint8(0),
-            y=uint8(0),
-            stkp=uint8(0),
-            pc=uint16(0),
-            status=uint8(0),
-        )
-
+        super().__init__()
         self.bus: Bus = bus
-
-        # Absolute Address
-        self.addr_abs: uint16 = uint16(0)
-
-        # Relative Address
-        self.addr_rel: uint16 = uint16(0)
-
-        # Current Opcode
-        self.opcode: uint8 = uint8(0)
-
-        # Current Cycles
-        self.cycles: uint8 = uint8(0)
-
-        # Fetched Data
-        self.fetched: uint8 = uint8(0)
-
         self.address_mode_selector = AddressModeSelector(self)
-
         self.inst_selector = InstructionSelector(self)
 
     def read(self, addr: uint16) -> uint8:
@@ -184,7 +159,7 @@ class Olc6502:
         self.addr_abs = uint16(0xFFFC)
         lo = self.read(self.addr_abs)
         hi = self.read(self.addr_abs + 1)
-        self.register.pc = uint16(uint16(hi) << 8) | lo
+        self.register.pc = uint16(uint16(uint16(hi) << 8) | uint16(lo))
 
         self.register.a = uint8(0)
         self.register.x = uint8(0)
@@ -226,7 +201,7 @@ class Olc6502:
             self.addr_abs = uint16(0xFFFE)
             lo = self.read(self.addr_abs)
             hi = self.read(self.addr_abs + 1)
-            self.register.pc = uint16(uint16(hi) << 8) | lo
+            self.register.pc = uint16(uint16(uint16(hi) << 8) | uint16(lo))
 
             self.cycles = uint8(7)
 
@@ -257,6 +232,6 @@ class Olc6502:
         self.addr_abs = uint16(0xFFFA)
         lo = self.read(self.addr_abs)
         hi = self.read(self.addr_abs + 1)
-        self.register.pc = uint16(uint16(hi) << 8) | lo
+        self.register.pc = uint16(uint16(uint16(hi) << 8) | uint16(lo))
 
         self.cycles = uint8(8)

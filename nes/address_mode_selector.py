@@ -3,7 +3,7 @@ Addressing Mode Selector
 """
 
 from numpy import uint16
-from nes.olc6502 import Olc6502
+from nes.cpu import Cpu
 from nes.address_mode import AddressingMode
 
 RequiresExtraCycle = bool
@@ -17,7 +17,7 @@ class AddressModeSelector:
     which return a boolean value indicating whether an extra cycle is required for the instruction.
     """
 
-    def __init__(self, cpu: Olc6502) -> None:
+    def __init__(self, cpu: Cpu) -> None:
         self.cpu = cpu
 
     def select(self, mode: AddressingMode) -> RequiresExtraCycle:
