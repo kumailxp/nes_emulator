@@ -7,6 +7,7 @@ from typing import Dict, List
 import pygame
 from nes.bus import Bus
 
+
 class HexdumpViewer:
     """
     A class for viewing hex dumps.
@@ -15,18 +16,18 @@ class HexdumpViewer:
         hex_dump (dict): A dictionary containing the hex dump data.
     """
 
-    def __init__(self, screen: pygame.Surface|None) -> None:
+    def __init__(self, screen: pygame.Surface | None) -> None:
         if screen is None:
-            pass
-
-        self.screen = screen
+            return
+        else:
+            self.screen = screen
         self.font_size = 14
         self.line_spacing = 28
-        self.hex_dump : Dict[int, List[int]] = {}
+        self.hex_dump: Dict[int, List[int]] = {}
         for i in range(0x0000, 0x00180, 0x0010):
             self.hex_dump[i] = [0] * 16
 
-        self.text_objects : Dict[int, pygame.Surface] = {}
+        self.text_objects: Dict[int, pygame.Surface] = {}
         self.hexdump_str_y_position = []
 
     def create(self) -> None:
@@ -46,6 +47,7 @@ class HexdumpViewer:
         Blits the hex dump to the screen.
         """
         add_extra = 0
+        self.screen: pygame.Surface
         for i, (_, text) in enumerate(self.text_objects.items()):
             if i % 8 == 0 and i != 0:
                 # Add extra spacing for every 8 lines
@@ -84,16 +86,15 @@ class HexdumpViewer:
         """
         assert len(chunk) == 128
         return all(chunk == 0 for chunk in chunk)
-        
 
     def load_from_file(self, ram_offset_: int, file_path_: str) -> None:
         """
         Loads the hex dump from a file.
 
         Args:
-            ram_offset_ (int): The offset in the emulator's memory where the hex dump should be loaded.
-            file_path_ (str): The path to the file containing the hex dump.
-
+            ram_offset_ (int): The offset in the emulator's memory where the hex dump
+            should be loaded. file_path_ (str): The path to the file containing
+            the hex dump.
         """
         nes = Bus()
         nes.load_to_ram(ram_offset_, file_path_)
@@ -106,7 +107,7 @@ class HexdumpViewer:
                     self.hex_dump[offset] = byte_chunk
                     offset += 16
         self.create()
-        
+
     def load(self, ram_offset_, asm_string_):
         """
         Load the given assembly code into the emulator's memory.
@@ -300,7 +301,7 @@ class NesSimulator:
 
 
 if __name__ == "__main__":
-    #x = HexdumpViewer(None)
-    #x.load_from_file(0x0080, "6502-mult.bin")
+    # x = HexdumpViewer(None)
+    # x.load_from_file(0x0080, "6502-mult.bin")
     NesSimulator().run()
     pygame.quit()
