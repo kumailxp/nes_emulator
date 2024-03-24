@@ -41,6 +41,7 @@ class AddressModeSelector:
         This addressing mode does not require an address,
         as the instruction operates on the implied register.
         """
+        self.cpu.fetched = self.cpu.register.a
         return False
 
     def IMM(self) -> RequiresExtraCycle:
