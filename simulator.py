@@ -58,10 +58,10 @@ class HexdumpViewer:
             handleColour=(g.r, g.g, g.b),
         )
 
-        self.output = TextBox(
+        self.scroll_tooltip = TextBox(
             self.screen, 455, 160, 40, 24, font=self.simple_font, fontSize=12
         )
-        self.output.disable()
+        self.scroll_tooltip.disable()
 
     def create(self) -> None:
         """
@@ -131,7 +131,7 @@ class HexdumpViewer:
         self.screen.blit(temp_surface, [3, 3])
 
         self.screen.blit(shape_surf, rect)
-        self.output.setText(f"{-int(self.slider.getValue()):04X}")
+        self.scroll_tooltip.setText(f"{-int(self.slider.getValue()):04X}")
 
     def check_128_byte_chunk(self, chunk) -> bool:
         """
