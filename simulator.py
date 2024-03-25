@@ -302,6 +302,8 @@ class NesSimulator:
                 running = False
             elif event.type == self.refresh:
                 self.draw()
+                pygame_widgets.update(event)
+                pygame.display.update()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_PLUS or event.key == pygame.K_KP_PLUS:
                     self.test_val += 1
@@ -325,9 +327,6 @@ class NesSimulator:
                 )  # event.pos is a tuple (x, y) representing the
             else:
                 pass
-
-            pygame_widgets.update(event)
-            pygame.display.update()
 
     def draw(self):
         """
