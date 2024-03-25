@@ -1,6 +1,8 @@
 astroid==3.1.0
 black==24.3.0
 click==8.1.7
+colorful==0.5.6
+dataclasses==0.6
 dill==0.3.8
 exceptiongroup==1.2.0
 iniconfig==2.0.0
@@ -9,10 +11,14 @@ markdown-it-py==3.0.0
 mccabe==0.7.0
 mdurl==0.1.2
 mypy-extensions==1.0.0
+numpy==1.26.4
 packaging==24.0
 pathspec==0.12.1
 platformdirs==4.2.0
 pluggy==1.4.0
+prettyprinter==0.18.0
+pygame==2.5.2
+pygame-widgets==1.1.5
 Pygments==2.17.2
 pylint==3.1.0
 pytest==8.1.1
