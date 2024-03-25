@@ -19,11 +19,12 @@ class HexdumpViewer:
         hex_dump (dict): A dictionary containing the hex dump data.
     """
 
-    def __init__(self, screen: pygame.Surface | None) -> None:
+    def __init__(self, screen: pygame.Surface | None, ram_offset_: int = 0) -> None:
         if screen is None:
             return
         else:
             self.screen = screen
+        self.ram_offset = ram_offset_
         self.font_size = 14
         self.line_spacing = 28
         self.hex_dump: Dict[int, List[int]] = {}
@@ -33,6 +34,9 @@ class HexdumpViewer:
         self.text_objects: Dict[int, pygame.Surface] = {}
         self.hexdump_str_y_position = []
 
+        self.simple_font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
+        self.bold_font = pygame.font.Font("DejaVuSansMono-Bold.ttf", self.font_size)
+
         g = pygame.Color("green3")
         self.slider = Slider(
             screen,
@@ -41,17 +45,15 @@ class HexdumpViewer:
             10,
             260,
             min=0,
-            max=99,
-            initial=99,
+            max=0xffff,
+            initial=0xffff,
             step=1,
             handleRadius=10,
             vertical=True,
             handleColour=(g.r, g.g, g.b),
         )
-        self.output = TextBox(screen, 475, 200, 50, 50, fontSize=30)
 
-        self.simple_font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
-        self.bold_font = pygame.font.Font("DejaVuSansMono-Bold.ttf", self.font_size)
+        self.output = TextBox(screen, 465, 150, 58, 24, font=self.simple_font, fontSize=12)
 
     def create(self) -> None:
         """
@@ -114,7 +116,7 @@ class HexdumpViewer:
         self.screen.blit(temp_surface, [3, 3])
 
         self.screen.blit(shape_surf, rect)
-        self.output.setText(self.slider.getValue())
+        self.output.setText(f"0x{-int(self.slider.getValue()):04X}")
 
     def check_128_byte_chunk(self, chunk) -> bool:
         """
@@ -126,7 +128,7 @@ class HexdumpViewer:
         assert len(chunk) == 128
         return all(chunk == 0 for chunk in chunk)
 
-    def load_from_file(self, ram_offset_: int, file_path_: str) -> None:
+    def load_from_file(self, ram_offset_: int, file_path_: str) -> int:
         """
         Loads the hex dump from a file.
 
@@ -136,7 +138,7 @@ class HexdumpViewer:
             the hex dump.
         """
         nes = Bus()
-        nes.load_to_ram(ram_offset_, file_path_)
+        current_ram_offset = nes.load_to_ram(ram_offset_, file_path_)
         ram = nes.ram
         for offset in range(0, len(ram), 128):
             chunk = ram[offset : offset + 128]
@@ -146,6 +148,7 @@ class HexdumpViewer:
                     self.hex_dump[offset] = byte_chunk
                     offset += 16
         self.create()
+        return current_ram_offset
 
     def load(self, ram_offset_, asm_string_):
         """
@@ -269,21 +272,20 @@ class NesSimulator:
         self.test_val = 20
         self.line_spacing = 28
         self.r_is_pressed = False
-        # font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
-        # self.sample_text = "0000000 7361 7274 696f 3d64 333d 312e 302e 620a"
-        # self.text0 = font.render(self.sample_text, True, (238, 58, 140))
-        # self.text1 = font.render(self.sample_text, True, (238, 58, 140))
 
-        self.hex_dumper = HexdumpViewer(self.screen)
+        self.ram_offset = 0x8000
+        self.hex_dumper = HexdumpViewer(self.screen, self.ram_offset)
         # self.hex_dumper.create()
-        ram_offset = 0x8000
         # asm_string = """
         # A2 0A 8E 00 00 A2 03 8E
         # 01 00 AC 00 00 A9 00 18
         # 6D 01 00 88 D0 FA 8D 02
         # 00 EA EA EA
         # """
-        self.hex_dumper.load_from_file(ram_offset, "nestest.nes")
+        m = self.hex_dumper.load_from_file(self.ram_offset, "nestest.nes")
+        self.hex_dumper.slider.max = -self.ram_offset
+        self.hex_dumper.slider.min = -m
+        self.hex_dumper.slider.setValue(-self.ram_offset)
 
         self.fps = 30
         self.refresh = pygame.USEREVENT + 1
@@ -297,7 +299,6 @@ class NesSimulator:
         running = True
         while running:
             event = pygame.event.wait()
-
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == self.refresh:
@@ -308,37 +309,29 @@ class NesSimulator:
                 if event.key == pygame.K_PLUS or event.key == pygame.K_KP_PLUS:
                     self.test_val += 1
                     print("test_val: ", self.test_val)
-                    # font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
-                    # self.text0 = font.render("sdfsdsd sf sdf sd fs df sdf ", True, (238, 58, 140))
-                    # self.text1 = font.render(self.sample_text, True, (238, 58, 140))
                 elif event.key == pygame.K_MINUS or event.key == pygame.K_KP_MINUS:
                     self.test_val -= 1
                     print("test_val: ", self.test_val)
-                    # font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
-                    # self.text0 = font.render(self.sample_text, True, (238, 58, 140))
-                    # self.text1 = font.render(self.sample_text, True, (238, 58, 140))
                 elif event.key == pygame.K_r:
                     print("r presed")
-                    # self.hex_dumper.update()
+                elif event.key == pygame.K_DOWN:
+                    v = self.hex_dumper.slider.getValue()
+                    if v > self.hex_dumper.slider.min:
+                        self.hex_dumper.slider.setValue(v - 0x80)
+                elif event.key == pygame.K_UP:
+                    v = self.hex_dumper.slider.getValue()
+                    if v < self.hex_dumper.slider.max:
+                        self.hex_dumper.slider.setValue(v + 0x80)
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                print("Mouse button pressed")
-                print(
-                    "Position:", event.pos
-                )  # event.pos is a tuple (x, y) representing the
-            else:
-                pass
+                print("Position:", event.pos)  # event.pos is a tuple (x, y) representing the
 
     def draw(self):
         """
         Draws the screen of the NES simulator.
         """
-
         self.screen.fill(self.bg_color)
-        # pygame.draw.rect(self.screen, (255,0,0), pygame.Rect(30, 30, 60, 60))
-        # self.screen.blit(self.text0, [10, 10])
         self.hex_dumper.blit()
         self.hex_dumper.draw_rect_alpha()
-        # self.screen.blit(self.text1, [10, self.line_spacing])
         pygame.display.flip()
 
 

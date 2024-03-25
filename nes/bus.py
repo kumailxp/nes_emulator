@@ -74,7 +74,7 @@ class Bus:
         log.error("Invalid address for read: %s", hex(addr))
         return uint8(0x00)
 
-    def load_to_ram(self, ram_offset: int, game_file: str):
+    def load_to_ram(self, ram_offset: int, game_file: str) -> int:
         """
         Loads the contents of a game file into the RAM of the NES emulator.
 
@@ -89,3 +89,4 @@ class Bus:
             for data in data_list:
                 self.ram[ram_offset] = data
                 ram_offset += 1
+        return ram_offset
