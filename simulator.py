@@ -5,6 +5,9 @@ An implementation of a NES simulator using Pygame.
 
 from typing import Dict, List
 import pygame
+import pygame_widgets
+from pygame_widgets.slider import Slider
+from pygame_widgets.textbox import TextBox
 from nes.bus import Bus
 
 
@@ -30,16 +33,37 @@ class HexdumpViewer:
         self.text_objects: Dict[int, pygame.Surface] = {}
         self.hexdump_str_y_position = []
 
+        g = pygame.Color("green3")
+        self.slider = Slider(
+            screen,
+            470,
+            186,
+            10,
+            260,
+            min=0,
+            max=99,
+            initial=99,
+            step=1,
+            handleRadius=10,
+            vertical=True,
+            handleColour=(g.r, g.g, g.b),
+        )
+        self.output = TextBox(screen, 475, 200, 50, 50, fontSize=30)
+
+        self.simple_font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
+        self.bold_font = pygame.font.Font("DejaVuSansMono-Bold.ttf", self.font_size)
+
     def create(self) -> None:
         """
         Draws the hex dump.
         """
         self.text_objects.clear()
-        font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
         for key, value in self.hex_dump.items():
             print(key, value)
             vals = " ".join([f"{val:02X}" for val in value])
-            text = font.render(f"0x{key:04X}: {vals}", True, (238, 58, 140))
+            text = self.simple_font.render(
+                f"0x{key:04X}: {vals}", True, pygame.Color("green1")
+            )
             self.text_objects[key] = text
 
     def blit(self) -> None:
@@ -48,17 +72,17 @@ class HexdumpViewer:
         """
         add_extra = 0
         self.screen: pygame.Surface
+        inital_space = 24
         for i, (_, text) in enumerate(self.text_objects.items()):
             if i % 8 == 0 and i != 0:
                 # Add extra spacing for every 8 lines
                 add_extra = (i / 8) * 16
-            if i == 0:
-                self.screen.blit(text, [10, 13])
-                self.hexdump_str_y_position.append(13 + 1)
-            else:
-                next_line_pos = self.line_spacing + ((i - 1) * 16) + add_extra
-                self.hexdump_str_y_position.append(next_line_pos + 1)
-                self.screen.blit(text, [10, next_line_pos])
+
+            next_line_pos = (
+                self.line_spacing + (inital_space + ((i - 1) * 16)) + add_extra
+            )
+            self.hexdump_str_y_position.append(next_line_pos)
+            self.screen.blit(text, [14, next_line_pos])
 
     def draw_rect_alpha(self):
         """
@@ -68,14 +92,29 @@ class HexdumpViewer:
         The color of the rectangles is red with an alpha value of 150 (semi-transparent).
 
         """
-        rect = pygame.Rect(72 + (24 * 4), self.hexdump_str_y_position[1], 20, 14)
+        rect = pygame.Rect(75 + (24 * 0), self.hexdump_str_y_position[1], 22, 17)
         shape_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(shape_surf, (255, 0, 0, 150), shape_surf.get_rect())
+        pygame.draw.rect(
+            shape_surf, pygame.Color("yellow"), shape_surf.get_rect(), width=1
+        )
         self.screen.blit(shape_surf, rect)
-        rect = pygame.Rect(72 + (24 * 4), self.hexdump_str_y_position[5], 20, 14)
+
+        rect = pygame.Rect(0, 0, 500, 465)
         shape_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(shape_surf, (255, 0, 0, 150), shape_surf.get_rect())
+        pygame.draw.rect(
+            shape_surf, pygame.Color("white"), shape_surf.get_rect(), width=3
+        )
+
+        text = self.bold_font.render(
+            " Hex Dump" + str(" " * 53), True, pygame.Color("black")
+        )
+        temp_surface = pygame.Surface(text.get_size())
+        temp_surface.fill(pygame.Color("white"))
+        temp_surface.blit(text, (0, 0))
+        self.screen.blit(temp_surface, [3, 3])
+
         self.screen.blit(shape_surf, rect)
+        self.output.setText(self.slider.getValue())
 
     def check_128_byte_chunk(self, chunk) -> bool:
         """
@@ -221,6 +260,7 @@ class NesSimulator:
         Initializes the NES simulator.
         """
         pygame.init()
+        pygame.display.set_caption("NES Simulator")
         self.width = 800
         self.height = 600
         self.screen = pygame.display.set_mode((self.width, self.height))
@@ -243,7 +283,7 @@ class NesSimulator:
         # 6D 01 00 88 D0 FA 8D 02
         # 00 EA EA EA
         # """
-        self.hex_dumper.load_from_file(ram_offset, "6502-mult.bin")
+        self.hex_dumper.load_from_file(ram_offset, "nestest.nes")
 
         self.fps = 30
         self.refresh = pygame.USEREVENT + 1
@@ -285,6 +325,9 @@ class NesSimulator:
                 )  # event.pos is a tuple (x, y) representing the
             else:
                 pass
+
+            pygame_widgets.update(event)
+            pygame.display.update()
 
     def draw(self):
         """
