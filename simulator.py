@@ -19,7 +19,7 @@ class HexdumpViewer:
         hex_dump (dict): A dictionary containing the hex dump data.
     """
 
-    def __init__(self, screen: pygame.Surface | None, ram_offset_: int = 0) -> None:
+    def __init__(self, screen: pygame.Surface | None, ram_offset_: int = 0, bin_len: int = 0) -> None:
         if screen is None:
             return
         else:
@@ -38,30 +38,45 @@ class HexdumpViewer:
         self.bold_font = pygame.font.Font("DejaVuSansMono-Bold.ttf", self.font_size)
 
         g = pygame.Color("green3")
+        minv = (
+            -self.ram_offset - (128 * 16)
+            if bin_len == 0
+            else -self.ram_offset - bin_len
+        )
         self.slider = Slider(
             screen,
             470,
-            186,
+            195,
             10,
-            260,
-            min=0,
-            max=0xffff,
-            initial=0xffff,
-            step=1,
+            250,
+            min=minv,
+            max=-self.ram_offset,
+            initial=0xFFFF,
+            step=128,
             handleRadius=10,
             vertical=True,
             handleColour=(g.r, g.g, g.b),
         )
 
-        self.output = TextBox(screen, 465, 150, 58, 24, font=self.simple_font, fontSize=12)
+        self.output = TextBox(
+            self.screen, 455, 160, 40, 24, font=self.simple_font, fontSize=12
+        )
+        self.output.disable()
 
     def create(self) -> None:
         """
         Draws the hex dump.
         """
         self.text_objects.clear()
+        viewable_ram = {}
         for key, value in self.hex_dump.items():
-            print(key, value)
+            proper_value = -self.slider.getValue()
+            if key <= 0x00F0 or (
+                key >= proper_value and key < proper_value + (16 * 16)
+            ):
+                # print(hex(int(self.slider.getValue())), hex(key), value)
+                viewable_ram[key] = value
+        for key, value in viewable_ram.items():
             vals = " ".join([f"{val:02X}" for val in value])
             text = self.simple_font.render(
                 f"0x{key:04X}: {vals}", True, pygame.Color("green1")
@@ -116,7 +131,7 @@ class HexdumpViewer:
         self.screen.blit(temp_surface, [3, 3])
 
         self.screen.blit(shape_surf, rect)
-        self.output.setText(f"0x{-int(self.slider.getValue()):04X}")
+        self.output.setText(f"{-int(self.slider.getValue()):04X}")
 
     def check_128_byte_chunk(self, chunk) -> bool:
         """
@@ -274,7 +289,11 @@ class NesSimulator:
         self.r_is_pressed = False
 
         self.ram_offset = 0x8000
-        self.hex_dumper = HexdumpViewer(self.screen, self.ram_offset)
+        binary_file_len = 0
+        with open("nestest.nes", "rb") as f:
+            data = f.read()
+            binary_file_len = len(list(data))
+        self.hex_dumper = HexdumpViewer(self.screen, self.ram_offset, binary_file_len)
         # self.hex_dumper.create()
         # asm_string = """
         # A2 0A 8E 00 00 A2 03 8E
@@ -318,14 +337,16 @@ class NesSimulator:
                     v = self.hex_dumper.slider.getValue()
                     if v > self.hex_dumper.slider.min:
                         self.hex_dumper.slider.setValue(v - 0x80)
+                    self.hex_dumper.create()
                 elif event.key == pygame.K_UP:
                     v = self.hex_dumper.slider.getValue()
                     if v < self.hex_dumper.slider.max:
                         self.hex_dumper.slider.setValue(v + 0x80)
+                    self.hex_dumper.create()
                 elif event.key == pygame.K_q:
                     pygame.quit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                print("Position:", event.pos)  # event.pos is a tuple (x, y) representing the
+            elif event.type == pygame.MOUSEBUTTONUP:
+                self.hex_dumper.create()
 
     def draw(self):
         """
