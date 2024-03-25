@@ -24,7 +24,7 @@ class HexdumpViewer:
         self.font_size = 14
         self.line_spacing = 28
         self.hex_dump: Dict[int, List[int]] = {}
-        for i in range(0x0000, 0x00180, 0x0010):
+        for i in range(0x0000, 0x00080, 0x0010):
             self.hex_dump[i] = [0] * 16
 
         self.text_objects: Dict[int, pygame.Surface] = {}
@@ -236,7 +236,7 @@ class NesSimulator:
 
         self.hex_dumper = HexdumpViewer(self.screen)
         # self.hex_dumper.create()
-        ram_offset = 0x0080
+        ram_offset = 0x8000
         # asm_string = """
         # A2 0A 8E 00 00 A2 03 8E
         # 01 00 AC 00 00 A9 00 18

@@ -34,3 +34,7 @@ coverage.xml
 
 # NES bin files
 *.bin
+*.nes
+
+# disassembly
+*.dis
