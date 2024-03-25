@@ -322,6 +322,8 @@ class NesSimulator:
                     v = self.hex_dumper.slider.getValue()
                     if v < self.hex_dumper.slider.max:
                         self.hex_dumper.slider.setValue(v + 0x80)
+                elif event.key == pygame.K_q:
+                    pygame.quit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 print("Position:", event.pos)  # event.pos is a tuple (x, y) representing the
 
