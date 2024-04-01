@@ -19,21 +19,23 @@ class HexdumpViewer:
         hex_dump (dict): A dictionary containing the hex dump data.
     """
 
-    def __init__(self, screen: pygame.Surface | None, ram_offset_: int = 0, bin_len: int = 0) -> None:
+    def __init__(
+        self, screen: pygame.Surface | None, ram_offset_: int = 0, bin_len: int = 0
+    ) -> None:
         if screen is None:
             return
         else:
             self.screen = screen
+
         self.ram_offset = ram_offset_
-        self.font_size = 14
-        self.line_spacing = 28
+        self.hex_dump_line_spacing = 28
         self.hex_dump: Dict[int, List[int]] = {}
         for i in range(0x0000, 0x00080, 0x0010):
             self.hex_dump[i] = [0] * 16
-
-        self.text_objects: Dict[int, pygame.Surface] = {}
+        self.hex_lines: Dict[int, pygame.Surface] = {}
         self.hexdump_str_y_position = []
 
+        self.font_size = 14
         self.simple_font = pygame.font.Font("DejaVuSansMono.ttf", self.font_size)
         self.bold_font = pygame.font.Font("DejaVuSansMono-Bold.ttf", self.font_size)
 
@@ -63,11 +65,11 @@ class HexdumpViewer:
         )
         self.scroll_tooltip.disable()
 
-    def create(self) -> None:
+    def create_hex_dump(self) -> None:
         """
         Draws the hex dump.
         """
-        self.text_objects.clear()
+        self.hex_lines.clear()
         viewable_ram = {}
         for key, value in self.hex_dump.items():
             proper_value = -self.slider.getValue()
@@ -81,40 +83,43 @@ class HexdumpViewer:
             text = self.simple_font.render(
                 f"0x{key:04X}: {vals}", True, pygame.Color("green1")
             )
-            self.text_objects[key] = text
+            self.hex_lines[key] = text
 
-    def blit(self) -> None:
+    def blit_hexdump(self) -> None:
         """
         Blits the hex dump to the screen.
         """
         add_extra = 0
         self.screen: pygame.Surface
         inital_space = 24
-        for i, (_, text) in enumerate(self.text_objects.items()):
+        for i, (_, text) in enumerate(self.hex_lines.items()):
             if i % 8 == 0 and i != 0:
                 # Add extra spacing for every 8 lines
                 add_extra = (i / 8) * 16
 
             next_line_pos = (
-                self.line_spacing + (inital_space + ((i - 1) * 16)) + add_extra
+                self.hex_dump_line_spacing + (inital_space + ((i - 1) * 16)) + add_extra
             )
             self.hexdump_str_y_position.append(next_line_pos)
             self.screen.blit(text, [14, next_line_pos])
 
-    def draw_rect_alpha(self):
+    def draw_hex_dump_view(self):
         """
-        Draws two semi-transparent rectangles on the screen.
+        Draws the hex dump view on the screen.
 
-        The rectangles are positioned at specific coordinates and have a size of 20x14 pixels.
-        The color of the rectangles is red with an alpha value of 150 (semi-transparent).
+        This method is responsible for drawing the hex dump view 
+        on the screen. It creates a rectangular shape, fills it 
+        with white color, and adds a title "Hex Dump" at the top 
+        left corner. It also sets the scroll tooltip text based 
+        on the slider value.
 
         """
-        rect = pygame.Rect(75 + (24 * 0), self.hexdump_str_y_position[1], 22, 17)
-        shape_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
-        pygame.draw.rect(
-            shape_surf, pygame.Color("yellow"), shape_surf.get_rect(), width=1
-        )
-        self.screen.blit(shape_surf, rect)
+        # rect = pygame.Rect(75 + (24 * 0), self.hexdump_str_y_position[1], 22, 17)
+        # shape_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+        # pygame.draw.rect(
+        #     shape_surf, pygame.Color("yellow"), shape_surf.get_rect(), width=1
+        # )
+        # self.screen.blit(shape_surf, rect)
 
         rect = pygame.Rect(0, 0, 500, 465)
         shape_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
@@ -132,6 +137,31 @@ class HexdumpViewer:
 
         self.screen.blit(shape_surf, rect)
         self.scroll_tooltip.setText(f"{-int(self.slider.getValue()):04X}")
+
+    def draw_log_box(self):
+        """
+        Draws the log box on the screen.
+
+        This method is responsible for drawing the log box on the screen.
+        It creates a rectangular shape, fills it with white color, and adds
+        a title "Log" at the top left corner.
+
+        """
+        rect = pygame.Rect(0, 465, 500, 335)
+        shape_surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+        pygame.draw.rect(
+            shape_surf, pygame.Color("white"), shape_surf.get_rect(), width=3
+        )
+
+        text = self.bold_font.render(
+            " Log" + str(" " * 58), True, pygame.Color("black")
+        )
+        temp_surface = pygame.Surface(text.get_size())
+        temp_surface.fill(pygame.Color("white"))
+        temp_surface.blit(text, (0, 0))
+        self.screen.blit(temp_surface, [3, 465])
+
+        self.screen.blit(shape_surf, rect)
 
     def check_128_byte_chunk(self, chunk) -> bool:
         """
@@ -162,7 +192,7 @@ class HexdumpViewer:
                 for byte_chunk in sixteen_byte_chunks:
                     self.hex_dump[offset] = byte_chunk
                     offset += 16
-        self.create()
+        self.create_hex_dump()
         return current_ram_offset
 
     def load(self, ram_offset_, asm_string_):
@@ -178,7 +208,7 @@ class HexdumpViewer:
         asm_list = HexdumpViewer.split_asm_hex_in_16(asm_string_)
         for i, byte_chunk in enumerate(asm_list):
             self.hex_dump[ram_offset_ + (i * 16)] = byte_chunk
-        self.create()
+        self.create_hex_dump()
 
     @classmethod
     def clean_up_string(cls, asm_string_: str) -> List[str]:
@@ -280,7 +310,7 @@ class NesSimulator:
         pygame.init()
         pygame.display.set_caption("NES Simulator")
         self.width = 800
-        self.height = 600
+        self.height = 800
         self.screen = pygame.display.set_mode((self.width, self.height))
         self.bg_color = 0, 0, 0
         self.font_size = 16
@@ -290,7 +320,8 @@ class NesSimulator:
 
         self.ram_offset = 0x8000
         binary_file_len = 0
-        with open("nestest.nes", "rb") as f:
+        file_name = "./cc65-example/build/bin/ex1.bin"
+        with open(file_name, "rb") as f:
             data = f.read()
             binary_file_len = len(list(data))
         self.hex_dumper = HexdumpViewer(self.screen, self.ram_offset, binary_file_len)
@@ -301,7 +332,7 @@ class NesSimulator:
         # 6D 01 00 88 D0 FA 8D 02
         # 00 EA EA EA
         # """
-        m = self.hex_dumper.load_from_file(self.ram_offset, "test.bin")
+        m = self.hex_dumper.load_from_file(self.ram_offset, file_name)
         self.hex_dumper.slider.max = -self.ram_offset
         self.hex_dumper.slider.min = -m
         self.hex_dumper.slider.setValue(-self.ram_offset)
@@ -337,28 +368,32 @@ class NesSimulator:
                     v = self.hex_dumper.slider.getValue()
                     if v > self.hex_dumper.slider.min:
                         self.hex_dumper.slider.setValue(v - 0x80)
-                    self.hex_dumper.create()
+                    self.hex_dumper.create_hex_dump()
                 elif event.key == pygame.K_UP:
                     v = self.hex_dumper.slider.getValue()
                     if v < self.hex_dumper.slider.max:
                         self.hex_dumper.slider.setValue(v + 0x80)
-                    self.hex_dumper.create()
+                    self.hex_dumper.create_hex_dump()
                 elif event.key == pygame.K_q:
                     pygame.quit()
             elif event.type == pygame.MOUSEBUTTONUP:
-                self.hex_dumper.create()
+                self.hex_dumper.create_hex_dump()
+                print("mouse up location: ", pygame.mouse.get_pos())
 
     def draw(self):
         """
         Draws the screen of the NES simulator.
         """
         self.screen.fill(self.bg_color)
-        self.hex_dumper.blit()
-        self.hex_dumper.draw_rect_alpha()
+        self.hex_dumper.blit_hexdump()
+        self.hex_dumper.draw_hex_dump_view()
+        self.hex_dumper.draw_log_box()
         pygame.display.flip()
 
 
 if __name__ == "__main__":
+    with open("nes.log", 'w', encoding='utf-8') as file:
+        pass
     # x = HexdumpViewer(None)
     # x.load_from_file(0x0080, "6502-mult.bin")
     NesSimulator().run()

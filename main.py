@@ -2,20 +2,17 @@
 
 """
 This is the main module of the NES emulator.
-
-It contains the `add` function which adds two numbers and returns the result.
-
-Usage:
-    To use this module, import it and call the `add` function with two numbers as arguments.
-
-Example:
-    >>> add(2, 3)
-    5
 """
+import os    
 from nes.bus import Bus
 from nes.olc6502 import Olc6502
 
+
+
 if __name__ == "__main__":
+    with open("nes.log", 'w', encoding='utf-8') as file:
+        pass
+    
     nes = Bus()
     nes.load_to_ram(0x8000, "./cc65-example/build/bin/ex1.bin")
     cpu = Olc6502(nes)
@@ -29,6 +26,3 @@ if __name__ == "__main__":
             key = input("Enter to continue...")
             if key == "q":
                 break
-    
-    
-    

@@ -2,20 +2,12 @@
 Addressing Mode Selector
 """
 
-import logging
-from rich.logging import RichHandler
 from numpy import uint16
 from nes.cpu import Cpu
 from nes.address_mode import AddressingMode
 
-
-FORMAT = "%(message)s"
-logging.basicConfig(
-    level="DEBUG", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(level="DEBUG")]
-)
-
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+from nes.nes_logger import setup_logger
+log = setup_logger(__name__)
 
 RequiresExtraCycle = bool
 # pylint: disable=invalid-name

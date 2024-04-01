@@ -16,15 +16,8 @@ from nes.address_mode import AddressingMode
 from nes.flags import Flags
 from nes.address_mode_selector import AddressModeSelector
 from nes.instruction_selector import InstructionSelector
-
-FORMAT = "%(message)s"
-logging.basicConfig(
-    level="DEBUG", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(level="DEBUG")]
-)
-
-log = logging.getLogger("cpu")
-log.setLevel(logging.DEBUG)
-
+from nes.nes_logger import setup_logger
+log = setup_logger(__name__)
 
 class Olc6502(Cpu):
     """

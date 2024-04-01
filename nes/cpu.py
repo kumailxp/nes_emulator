@@ -6,6 +6,8 @@ from numpy import uint8, uint16
 from nes.register import Register
 from nes.flags import Flags
 
+from nes.nes_logger import setup_logger
+log = setup_logger(__name__)
 
 class Cpu:
     """

@@ -44,3 +44,6 @@ coverage.xml
 
 #cc65-example
 cc65-example/build
+
+#nes logfile
+nes.log

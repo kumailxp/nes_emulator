@@ -2,18 +2,10 @@
 Copy-Left 2024 NES Emulator Project
 """
 
-import logging
 import numpy as np
 from numpy import uint8, uint16
-from rich.logging import RichHandler
-
-FORMAT = "%(filename)s:%(lineno)d %(message)s"
-logging.basicConfig(
-    level="DEBUG", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(level="DEBUG")]
-)
-
-log = logging.getLogger("bus")
-log.setLevel(logging.DEBUG)
+from nes.nes_logger import setup_logger
+log = setup_logger(__name__)
 
 class Bus:
     """
@@ -52,7 +44,7 @@ class Bus:
         """
         if 0x0000 <= addr <= 0xFFFF:
             #log.info("write 0x%02X to 0x%04X", hex(data), hex(addr))
-            log.info(f"write {data:04X} to {addr:04X}")
+            log.info(f"write 0x{data:04X} to 0x{addr:04X}")
             self.ram[addr] = int(data)
         else:
             log.error("Invalid address for write: 0x%04X", hex(addr))
