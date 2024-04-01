@@ -73,8 +73,8 @@ class HexdumpViewer:
             3,
             290,
             min=0,
-            max=1000,
-            initial=1000,
+            max=50,
+            initial=50,
             step=1,
             handleRadius=5,
             vertical=True,
@@ -115,16 +115,15 @@ class HexdumpViewer:
         """
         self.log_lines.clear()
 
-        log_data = {}
         with open("nes.log", "r", encoding="utf-8") as file_:
             lines = file_.readlines()
-            for i, line in enumerate(lines):
+            extra_lines = 0 if len(lines) < 120  else len(lines) - 120
+            for i, line in enumerate(lines[-120:]):
                 text = self.simple_small_font.render(
-                    line.rstrip(), True, pygame.Color("green1")
+                    str(i + extra_lines) + "| " + line.rstrip(), True, pygame.Color("green1")
                 )
-                log_data[i] = text
                 self.log_lines.append(text)
-
+            
     def blit_hexdump(self) -> None:
         """
         Blits the hex dump to the screen.
@@ -152,7 +151,7 @@ class HexdumpViewer:
 
         """
         self.screen: pygame.Surface
-        inital_space = 469
+        inital_space = 460
         log_slider_inverted_value = self.log_slider.max - self.log_slider.getValue()
 
         current_line = 1
