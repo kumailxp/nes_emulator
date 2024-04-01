@@ -301,7 +301,7 @@ class NesSimulator:
         # 6D 01 00 88 D0 FA 8D 02
         # 00 EA EA EA
         # """
-        m = self.hex_dumper.load_from_file(self.ram_offset, "nestest.nes")
+        m = self.hex_dumper.load_from_file(self.ram_offset, "test.bin")
         self.hex_dumper.slider.max = -self.ram_offset
         self.hex_dumper.slider.min = -m
         self.hex_dumper.slider.setValue(-self.ram_offset)

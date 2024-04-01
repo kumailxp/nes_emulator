@@ -128,3 +128,18 @@ class InstructionLookupTable:
         0xF8: I(O.SED, A.IMP, u8(2), 1), 0xF9: I(O.SBC, A.ABY, u8(4), 3), 0xFA: I(O.NOP, A.IMP, u8(2), 1), 0xFB: I(O.JAM, A.IMP, u8(7), 0),
         0xFC: I(O.JAM, A.IMP, u8(4), 0), 0xFD: I(O.SBC, A.ABX, u8(4), 3), 0xFE: I(O.INC, A.ABX, u8(7), 3), 0xFF: I(O.JAM, A.IMP, u8(7), 0)
     }
+    
+    @staticmethod
+    def opcode_lookup(opcode: uint8) -> str:
+        """
+        Looks up an opcode in the lookup table and returns the corresponding instruction.
+
+        Args:
+        - opcode (int): The opcode to look up.
+
+        Returns:
+        - Instruction: The instruction corresponding to the opcode.
+        """
+        return str(InstructionLookupTable.table[opcode].opcode)
+
+ 

@@ -38,3 +38,9 @@ coverage.xml
 
 # disassembly
 *.dis
+
+# assembly file
+*.s
+
+#cc65-example
+cc65-example/build

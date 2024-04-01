@@ -1,7 +1,8 @@
 """
 Implementation of the instruction selector.
 """
-
+import logging
+from rich.logging import RichHandler
 from numpy import uint8, uint16
 #from nes.olc6502 import Olc6502
 from nes.cpu import Cpu
@@ -9,6 +10,14 @@ from nes.flags import Flags
 from nes.isa import InstructionLookupTable
 from nes.address_mode import AddressingMode
 from nes.opcodes import Opcodes
+
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="DEBUG", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(level="DEBUG")]
+)
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 RequiresExtraCycle = bool
 
@@ -479,6 +488,7 @@ class InstructionSelector:
         """
         fetched = self.cpu.fetch()
         self.cpu.register.a = fetched
+        log.debug("Loaded %d(0x%x) into accumulator", fetched, fetched)
         self.cpu.set_flag(Flags.Z, self.cpu.register.a == 0x00)
         self.cpu.set_flag(Flags.N, bool(self.cpu.register.a & uint8(0x80)))
         return True

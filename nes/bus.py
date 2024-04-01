@@ -7,14 +7,13 @@ import numpy as np
 from numpy import uint8, uint16
 from rich.logging import RichHandler
 
-FORMAT = "%(message)s"
+FORMAT = "%(filename)s:%(lineno)d %(message)s"
 logging.basicConfig(
     level="DEBUG", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(level="DEBUG")]
 )
 
 log = logging.getLogger("bus")
 log.setLevel(logging.DEBUG)
-
 
 class Bus:
     """
@@ -42,6 +41,7 @@ class Bus:
         """
         self.ram = np.zeros(64 * 1024, dtype=uint8)
 
+
     def write(self, addr : uint16, data : uint8) -> None:
         """
         Write data to the specified address.
@@ -51,11 +51,11 @@ class Bus:
             data: The data to write.
         """
         if 0x0000 <= addr <= 0xFFFF:
-            log.info("write %s to %s", hex(data), hex(addr))
+            log.info("write 0x%02X to 0x%04X", hex(data), hex(addr))
             self.ram[addr] = int(data)
         else:
-            log.error("Invalid address for write: %s", hex(addr))
-            raise IndexError(f"Invalid address for write: {addr}")
+            log.error("Invalid address for write: 0x%04X", hex(addr))
+            raise IndexError(f"Invalid address for write: {addr:04X}")
 
     def read(self, addr : uint16) -> uint8:
         """
@@ -68,10 +68,10 @@ class Bus:
             The data read from the address.
         """
         if 0x0000 <= addr <= 0xFFFF:
-            log.info("read %s from %s", hex(self.ram[addr]), hex(addr))
+            log.info("read 0x%02X from 0x%04X", self.ram[addr], addr)
             return uint8(self.ram[addr])
 
-        log.error("Invalid address for read: %s", hex(addr))
+        log.error("Invalid address for read: 0x%04X", hex(addr))
         return uint8(0x00)
 
     def load_to_ram(self, ram_offset: int, game_file: str) -> int:

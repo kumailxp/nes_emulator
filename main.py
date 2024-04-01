@@ -12,24 +12,23 @@ Example:
     >>> add(2, 3)
     5
 """
-
-
-from rich import print as rprint
-
-def add(a, b):
-    """
-    Adds two numbers and returns the result.
-
-    Parameters:
-    a (int): The first number.
-    b (int): The second number.
-
-    Returns:
-    int: The sum of the two numbers.
-    """
-    return a + b
-
+from nes.bus import Bus
+from nes.olc6502 import Olc6502
 
 if __name__ == "__main__":
-    rprint("[bold red]hello")
-    print(add(2, 3))
+    nes = Bus()
+    nes.load_to_ram(0x8000, "./cc65-example/build/bin/ex1.bin")
+    cpu = Olc6502(nes)
+    nes.ram[0xFFFC] = 0x00
+    nes.ram[0xFFFD] = 0x80
+    cpu.reset()
+    
+    while True:
+        cpu.clock()
+        if cpu.cycles == 0:
+            key = input("Enter to continue...")
+            if key == "q":
+                break
+    
+    
+    

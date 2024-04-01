@@ -2,9 +2,20 @@
 Addressing Mode Selector
 """
 
+import logging
+from rich.logging import RichHandler
 from numpy import uint16
 from nes.cpu import Cpu
 from nes.address_mode import AddressingMode
+
+
+FORMAT = "%(message)s"
+logging.basicConfig(
+    level="DEBUG", format=FORMAT, datefmt="[%X]", handlers=[RichHandler(level="DEBUG")]
+)
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 RequiresExtraCycle = bool
 # pylint: disable=invalid-name
@@ -50,8 +61,9 @@ class AddressModeSelector:
 
         This addressing mode uses the next byte as the address.
         """
-        self.cpu.register.pc += 1
         self.cpu.addr_abs = self.cpu.register.pc
+        self.cpu.register.pc += 1
+        log.debug("IMM: absolute address: 0x%04X", self.cpu.addr_abs)
         return False
 
     def ZP0(self) -> RequiresExtraCycle:
@@ -115,6 +127,7 @@ class AddressModeSelector:
         hi = self.cpu.read(self.cpu.register.pc)
         self.cpu.register.pc += 1
         self.cpu.addr_abs = uint16((hi << 8) | lo)
+        log.debug("ABS: 0x%04X", self.cpu.addr_abs)
         return False
 
     def ABX(self) -> RequiresExtraCycle:

@@ -66,7 +66,7 @@ class Olc6502(Cpu):
             The data read from the address.
         """
         data: uint8 = self.bus.read(addr)
-        log.info("read %s from %s", hex(data), hex(addr))
+#        log.info("read %s from %s", hex(data), hex(addr))
         return data
 
     def write(self, addr: uint16, data: uint8) -> None:
@@ -77,7 +77,7 @@ class Olc6502(Cpu):
             addr: The address to write to.
             data: The data to write.
         """
-        log.info("write %s to %s", hex(data), hex(addr))
+#        log.info("write %s to %s", hex(data), hex(addr))
         self.bus.write(addr, data)
 
     def get_flag(self, flag: Flags) -> uint8:
@@ -109,21 +109,26 @@ class Olc6502(Cpu):
         and executing the instruction associated with the opcode.
 
         """
+        log.info("Cycles: %s", self.cycles)
         if self.cycles == 0:
             self.set_flag(Flags.U, True)
             self.opcode = self.read(self.register.pc)
+            log.info("PC: %s, %s", hex(self.register.pc), InstructionLookupTable.opcode_lookup(self.opcode))
             self.register.pc += 1
             instruction = InstructionLookupTable.table[self.opcode]
             self.cycles = instruction.cycles
 
             addr_mode_selector = self.address_mode_selector
+            log.info("Addr mode: %s", instruction.addr_mode)
             instr_selector = self.inst_selector
             require_extra_cycle_from_mode = addr_mode_selector.select(
                 instruction.addr_mode
             )
+            log.info(self.register)
             require_extra_cycle_from_instruction = instr_selector.select(
                 instruction.opcode
             )
+            log.info(self.register)
 
             if require_extra_cycle_from_mode and require_extra_cycle_from_instruction:
                 self.cycles += 1
