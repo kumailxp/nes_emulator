@@ -91,6 +91,7 @@ class HexdumpViewer:
     def create_hex_dump(self) -> None:
         """
         Draws the hex dump.
+
         """
         self.hex_lines.clear()
         viewable_ram = {}
@@ -99,7 +100,6 @@ class HexdumpViewer:
             if key <= 0x00F0 or (
                 key >= proper_value and key < proper_value + (16 * 16)
             ):
-                # print(hex(int(self.slider.getValue())), hex(key), value)
                 viewable_ram[key] = value
         for key, value in viewable_ram.items():
             vals = " ".join([f"{val:02X}" for val in value])
@@ -109,13 +109,19 @@ class HexdumpViewer:
             self.hex_lines[key] = text
 
     def create_log_lines(self):
+        """
+        This method clears the existing log lines and reads the contents of the 'nes.log' file.
+        Each line is rendered using a small font with green color and added to the log_lines list.
+        """
         self.log_lines.clear()
 
         log_data = {}
         with open("nes.log", "r", encoding="utf-8") as file_:
             lines = file_.readlines()
             for i, line in enumerate(lines):
-                text = self.simple_small_font.render(line.rstrip(), True, pygame.Color("green1"))
+                text = self.simple_small_font.render(
+                    line.rstrip(), True, pygame.Color("green1")
+                )
                 log_data[i] = text
                 self.log_lines.append(text)
 
@@ -138,15 +144,24 @@ class HexdumpViewer:
             self.screen.blit(text, [14, next_line_pos])
 
     def blit_logs(self) -> None:
+        """Blits the log lines onto the screen.
+
+        This method is responsible for rendering the log lines onto the screen
+        based on the current position of the log slider. It skips the log lines
+        that are not within the visible range defined by the log slider.
+
+        """
         self.screen: pygame.Surface
         inital_space = 469
         log_slider_inverted_value = self.log_slider.max - self.log_slider.getValue()
-        
+
         current_line = 1
         for i, line in enumerate(self.log_lines):
-            if not (log_slider_inverted_value <= i < log_slider_inverted_value + 19):
+            if not log_slider_inverted_value <= i < log_slider_inverted_value + 19:
                 continue
-            next_line_pos = self.hex_dump_line_spacing + (inital_space + ((current_line - 1) * 16))
+            next_line_pos = self.hex_dump_line_spacing + (
+                inital_space + ((current_line - 1) * 16)
+            )
             current_line += 1
             self.screen.blit(line, [14, next_line_pos])
 
@@ -154,10 +169,10 @@ class HexdumpViewer:
         """
         Draws the hex dump view on the screen.
 
-        This method is responsible for drawing the hex dump view 
-        on the screen. It creates a rectangular shape, fills it 
-        with white color, and adds a title "Hex Dump" at the top 
-        left corner. It also sets the scroll tooltip text based 
+        This method is responsible for drawing the hex dump view
+        on the screen. It creates a rectangular shape, fills it
+        with white color, and adds a title "Hex Dump" at the top
+        left corner. It also sets the scroll tooltip text based
         on the slider value.
 
         """
@@ -442,7 +457,7 @@ class NesSimulator:
 
 
 if __name__ == "__main__":
-    with open("nes.log", 'w', encoding='utf-8') as file:
+    with open("nes.log", "w", encoding="utf-8") as file:
         pass
     # x = HexdumpViewer(None)
     # x.load_from_file(0x0080, "6502-mult.bin")

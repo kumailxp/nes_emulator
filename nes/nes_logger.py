@@ -15,12 +15,12 @@ def setup_logger(logger_name: str) -> logging.Logger:
         logging.Logger: The configured logger object.
 
     """
-    FORMAT = "%(filename)s:%(lineno)d [%(levelname)s] %(message)s"
+    format_string = "%(filename)s:%(lineno)d [%(levelname)s] %(message)s"
     log = logging.getLogger(logger_name)
     log.setLevel(logging.DEBUG)
 
     logging.Logger.addHandler(log, logging.FileHandler("nes.log", mode="a"))
     logging.Logger.addHandler(log, RichHandler(level="DEBUG"))
     for h in log.handlers:
-        h.setFormatter(logging.Formatter(FORMAT))
+        h.setFormatter(logging.Formatter(format_string))
     return log
