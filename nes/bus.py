@@ -51,7 +51,8 @@ class Bus:
             data: The data to write.
         """
         if 0x0000 <= addr <= 0xFFFF:
-            log.info("write 0x%02X to 0x%04X", hex(data), hex(addr))
+            #log.info("write 0x%02X to 0x%04X", hex(data), hex(addr))
+            log.info(f"write {data:04X} to {addr:04X}")
             self.ram[addr] = int(data)
         else:
             log.error("Invalid address for write: 0x%04X", hex(addr))

@@ -97,9 +97,11 @@ class InstructionSelector:
         fetched = uint16(self.cpu.fetch())
 
         # Perform the subtraction with carry
-        value = uint16(fetched) ^ uint16(0x00FF)
+        value = uint16(uint16(fetched) ^ uint16(0x00FF))
+        log.debug("Fetched: %d(0x%x), Value: %d(0x%x)", fetched, fetched, value, value)
+        log.debug("A: %d(0x%x), C: %d", self.cpu.register.a, self.cpu.register.a, self.cpu.get_flag(Flags.C))
         temp = uint16(self.cpu.register.a) + value + uint16(self.cpu.get_flag(Flags.C))
-
+        log.debug("Temp: %d(0x%x)", temp, temp)
         # Set the carry flag if overflow occurs
         self.cpu.set_flag(Flags.C, bool(temp & uint16(0xFF00)))
 

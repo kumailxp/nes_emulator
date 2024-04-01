@@ -5,10 +5,9 @@ SYMBOLS {
 
 MEMORY {
   ROM: start = $8000, size = 4096, file = %O;
-  RAM:    start = $6000,  size = 1024, type = rw;
 }
 SEGMENTS {
   CODE:         load = ROM, TYPE = ro;
-  DATA:         load = ROM, run = RAM, type = rw, define = yes;
+  DATA:         load = ROM, type = rw, define = yes;
   RESET_VECTOR:	load = ROM, type = ro, start = $FFFC, optional = yes;
 }
